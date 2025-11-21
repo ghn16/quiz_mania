@@ -3,8 +3,9 @@
     <div
       v-for="theme in themes"
       :key="theme.id"
-      @click="$emit('start-quiz', theme.id)"
-      class="theme-card">
+      class="theme-card"
+      @click="emit('start-quiz', theme.id)"
+    >
       <div class="theme-icon">{{ theme.icon }}</div>
       <div class="theme-name">{{ theme.name }}</div>
       <div class="theme-info">{{ theme.questions.length }} questions</div>
@@ -12,17 +13,12 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ThemeSelection',
-  props: {
-    themes: {
-      type: Array,
-      required: true
-    }
-  },
-  emits: ['start-quiz']
-}
+<script setup>
+defineProps({
+  themes: { type: Array, required: true }
+})
+
+const emit = defineEmits(['start-quiz'])
 </script>
 
 <style scoped>
@@ -74,7 +70,7 @@ export default {
 .theme-icon {
   font-size: 5em;
   margin-bottom: 20px;
-  filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
   animation: bounce 2s infinite;
 }
 
@@ -98,7 +94,7 @@ export default {
   font-weight: 700;
   color: #fff;
   margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .theme-info {

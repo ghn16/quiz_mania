@@ -1,40 +1,40 @@
 <template>
   <div class="quiz-box results-box">
     <h2 class="results-title">Quiz Terminé!</h2>
-    <div class="results-emoji">{{ getResultEmoji() }}</div>
+    <div class="results-emoji">{{ resultEmoji }}</div>
     <div class="results-score">{{ score }}/{{ totalQuestions }}</div>
-    <p class="results-percentage">{{ getPercentage() }}% de réussite</p>
-    <button @click="$emit('back-to-themes')" class="btn btn-primary">
+    <p class="results-percentage">{{ percentage }}% de réussite</p>
+    <button class="btn btn-primary" @click="emit('back-to-themes')">
       🏠 Retour aux thèmes
     </button>
-    <button @click="$emit('restart')" class="btn btn-secondary">
+    <button class="btn btn-secondary" @click="emit('restart')">
       🔄 Recommencer
     </button>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'QuizResults',
-  props: {
-    score: Number,
-    totalQuestions: Number
-  },
-  emits: ['restart', 'back-to-themes'],
-  methods: {
-    getPercentage() {
-      return Math.round((this.score / this.totalQuestions) * 100)
-    },
-    getResultEmoji() {
-      const p = this.getPercentage()
-      if (p === 100) return '🏆'
-      if (p >= 80) return '🎉'
-      if (p >= 60) return '😊'
-      if (p >= 40) return '😐'
-      return '😢'
-    }
-  }
-}
+<script setup>
+import { computed } from 'vue'
+
+const props = defineProps({
+  score: { type: Number, required: true },
+  totalQuestions: { type: Number, required: true }
+})
+
+const emit = defineEmits(['restart', 'back-to-themes'])
+
+const percentage = computed(() =>
+  Math.round((props.score / props.totalQuestions) * 100)
+)
+
+const resultEmoji = computed(() => {
+  const p = percentage.value
+  if (p === 100) return '🏆'
+  if (p >= 80) return '🎉'
+  if (p >= 60) return '😊'
+  if (p >= 40) return '😐'
+  return '😢'
+})
 </script>
 
 <style scoped>
@@ -57,7 +57,7 @@ export default {
   font-weight: 900;
   color: #1e3a8a;
   margin-bottom: 30px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .results-emoji {
@@ -78,12 +78,44 @@ export default {
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 30px 0;
 }
 
 .results-percentage {
   font-size: 1.8em;
   color: #64748b;
-  margin: 20px 0;
+  margin: 20px 0 40px;
+}
+
+.btn {
+  padding: 18px 40px;
+  border: none;
+  border-radius: 15px;
+  font-size: 1.2em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin: 10px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(37, 99, 235, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1e3a8a;
+}
+
+.btn-secondary:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(251, 191, 36, 0.4);
 }
 </style>

@@ -15,64 +15,56 @@
   />
 </template>
 
-<script>
+<script setup>
+import { computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { quizStore } from '../store/quizStore'
 import QuizGame from '../components/QuizGame.vue'
 
-export default {
-  name: 'QuizView',
-  components: {
-    QuizGame
-  },
-  props: {
-    themeId: {
-      type: String,
-      required: true
-    }
-  },
-  data() {
-    return {
-      quizStore
-    }
-  },
-  computed: {
-    currentQuestion() {
-      return quizStore.currentQuestions[quizStore.currentQuestionIndex]
-    },
-    progress() {
-      return ((quizStore.currentQuestionIndex + 1) / quizStore.totalQuestions) * 100
-    }
-  },
-  mounted() {
-    if (!quizStore.currentTheme) {
-      const success = quizStore.startQuiz(this.themeId)
-      if (!success) {
-        this.$router.push('/')
-        return
-      }
-    }
+const props = defineProps({
+  themeId: { type: String, required: true }
+})
+
+const router = useRouter()
+
+const currentQuestion = computed(() =>
+  quizStore.currentQuestions[quizStore.currentQuestionIndex]
+)
+
+const progress = computed(() =>
+  ((quizStore.currentQuestionIndex + 1) / quizStore.totalQuestions) * 100
+)
+
+const nextQuestion = () => {
+  const hasNext = quizStore.nextQuestion()
+  if (!hasNext) {
+    router.push('/results')
+  } else {
     quizStore.startTimer(() => {
-      setTimeout(() => this.nextQuestion(), 1500)
+      setTimeout(() => nextQuestion(), 1500)
     })
-  },
-  beforeUnmount() {
-    quizStore.stopTimer()
-  },
-  methods: {
-    selectAnswer(index) {
-      quizStore.selectAnswer(index)
-      setTimeout(() => this.nextQuestion(), 1500)
-    },
-    nextQuestion() {
-      const hasNext = quizStore.nextQuestion()
-      if (!hasNext) {
-        this.$router.push('/results')
-      } else {
-        quizStore.startTimer(() => {
-          setTimeout(() => this.nextQuestion(), 1500)
-        })
-      }
-    }
   }
 }
+
+const selectAnswer = (index) => {
+  quizStore.selectAnswer(index)
+  setTimeout(() => nextQuestion(), 1500)
+}
+
+onMounted(() => {
+  if (!quizStore.currentTheme) {
+    const success = quizStore.startQuiz(props.themeId)
+    if (!success) {
+      router.push('/')
+      return
+    }
+  }
+  quizStore.startTimer(() => {
+    setTimeout(() => nextQuestion(), 1500)
+  })
+})
+
+onBeforeUnmount(() => {
+  quizStore.stopTimer()
+})
 </script>

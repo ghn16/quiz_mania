@@ -7,10 +7,7 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'FloatingShapes'
-}
+<script setup>
 </script>
 
 <style scoped>

@@ -2,7 +2,7 @@
   <div class="quiz-box">
     <div class="progress-container">
       <div class="progress-bar">
-        <div class="progress-fill" :style="{width: progress + '%'}"></div>
+        <div class="progress-fill" :style="{ width: progress + '%' }"></div>
       </div>
     </div>
 
@@ -17,46 +17,47 @@
 
     <div class="question-text">{{ currentQuestion.question }}</div>
 
-    <div v-if="showFeedback" class="feedback-emoji">{{ feedback }}</div>
+    <!-- SOIT le feedback, SOIT les réponses (pas les deux) -->
+    <div v-if="showFeedback" class="feedback-container">
+      <div class="feedback-emoji">{{ feedback }}</div>
+    </div>
 
-    <div class="answers-container">
+    <div v-else class="answers-container">
       <button
         v-for="(answer, index) in currentQuestion.answers"
         :key="index"
-        @click="$emit('select-answer', index)"
         :disabled="answered"
         :class="getAnswerClass(index)"
-        class="answer-btn">
+        class="answer-btn"
+        @click="emit('select-answer', index)"
+      >
         {{ answer }}
       </button>
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'QuizGame',
-  props: {
-    currentQuestion: Object,
-    currentQuestionIndex: Number,
-    totalQuestions: Number,
-    score: Number,
-    timeLeft: Number,
-    answered: Boolean,
-    selectedAnswer: Number,
-    showFeedback: Boolean,
-    feedback: String,
-    progress: Number
-  },
-  emits: ['select-answer'],
-  methods: {
-    getAnswerClass(index) {
-      if (!this.answered) return ''
-      if (index === this.currentQuestion.correct) return 'correct'
-      if (index === this.selectedAnswer) return 'incorrect'
-      return ''
-    }
-  }
+<script setup>
+const props = defineProps({
+  currentQuestion: { type: Object, required: true },
+  currentQuestionIndex: { type: Number, required: true },
+  totalQuestions: { type: Number, required: true },
+  score: { type: Number, required: true },
+  timeLeft: { type: Number, required: true },
+  answered: { type: Boolean, required: true },
+  selectedAnswer: { type: Number, default: null },
+  showFeedback: { type: Boolean, required: true },
+  feedback: { type: String, default: '' },
+  progress: { type: Number, required: true }
+})
+
+const emit = defineEmits(['select-answer'])
+
+const getAnswerClass = (index) => {
+  if (!props.answered) return ''
+  if (index === props.currentQuestion.correct) return 'correct'
+  if (index === props.selectedAnswer) return 'incorrect'
+  return ''
 }
 </script>
 
@@ -86,7 +87,7 @@ export default {
   background: rgba(30, 58, 138, 0.2);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .progress-fill {
@@ -145,10 +146,16 @@ export default {
   line-height: 1.4;
 }
 
+.feedback-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  margin: 40px 0;
+}
+
 .feedback-emoji {
-  text-align: center;
-  font-size: 8em;
-  margin: 30px 0;
+  font-size: 10em;
   animation: emojiPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 

@@ -28,10 +28,7 @@ const routes = [
     path: '/admin',
     name: 'admin',
     component: AdminView,
-    meta: {
-      title: 'Administration',
-      requiresAuth: true
-    }
+    meta: { title: 'Administration' }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -39,24 +36,12 @@ const routes = [
   }
 ]
 
-const router = createRouter({
+export const router = createRouter({
   history: createWebHistory(),
   routes
 })
 
 router.beforeEach((to, from, next) => {
   document.title = to.meta.title || 'Quiz Mania'
-
-  if (to.meta.requiresAuth) {
-    const isAdmin = sessionStorage.getItem('isAdmin') === 'true'
-    if (!isAdmin) {
-      next('/')
-    } else {
-      next()
-    }
-  } else {
-    next()
-  }
+  next()
 })
-
-export default router

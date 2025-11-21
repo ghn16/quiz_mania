@@ -7,30 +7,21 @@
   />
 </template>
 
-<script>
+<script setup>
+import { useRouter } from 'vue-router'
 import { quizStore } from '../store/quizStore'
 import QuizResults from '../components/QuizResults.vue'
 
-export default {
-  name: 'ResultsView',
-  components: {
-    QuizResults
-  },
-  data() {
-    return {
-      quizStore
-    }
-  },
-  methods: {
-    restart() {
-      const themeId = quizStore.currentTheme.id
-      quizStore.resetQuiz()
-      this.$router.push(`/quiz/${themeId}`)
-    },
-    backToThemes() {
-      quizStore.resetQuiz()
-      this.$router.push('/')
-    }
-  }
+const router = useRouter()
+
+const restart = () => {
+  const themeId = quizStore.currentTheme.id
+  quizStore.resetQuiz()
+  router.push(`/quiz/${themeId}`)
+}
+
+const backToThemes = () => {
+  quizStore.resetQuiz()
+  router.push('/')
 }
 </script>

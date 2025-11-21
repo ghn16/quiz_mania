@@ -20,38 +20,24 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { quizStore } from '../store/quizStore'
 import ThemeSelection from '../components/ThemeSelection.vue'
 
-export default {
-  name: 'HomeView',
-  components: {
-    ThemeSelection
-  },
-  setup() {
-    const router = useRouter()
+const router = useRouter()
 
-    // Charger les thèmes au montage du composant
-    onMounted(async () => {
-      await quizStore.loadThemes()
-    })
+onMounted(async () => {
+  await quizStore.loadThemes()
+})
 
-    const startQuiz = async (themeId) => {
-      const success = await quizStore.startQuiz(themeId)
-      if (success) {
-        router.push(`/quiz/${themeId}`)
-      } else {
-        alert('⚠️ Ce thème ne contient pas encore de questions')
-      }
-    }
-
-    return {
-      quizStore,
-      startQuiz
-    }
+const startQuiz = async (themeId) => {
+  const success = await quizStore.startQuiz(themeId)
+  if (success) {
+    router.push(`/quiz/${themeId}`)
+  } else {
+    alert('⚠️ Ce thème ne contient pas encore de questions')
   }
 }
 </script>

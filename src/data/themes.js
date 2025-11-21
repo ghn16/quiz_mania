@@ -30,7 +30,7 @@ export const themesData = [
     icon: '🔬',
     questions: [
       {
-        question: 'Quelle est la formule chimique de l\'eau ?',
+        question: "Quelle est la formule chimique de l'eau ?",
         answers: ['H2O', 'CO2', 'O2', 'H2SO4'],
         correct: 0,
         time: 10
@@ -55,7 +55,7 @@ export const themesData = [
         time: 15
       },
       {
-        question: 'Qui a découvert l\'Amérique ?',
+        question: "Qui a découvert l'Amérique ?",
         answers: ['Vasco de Gama', 'Christophe Colomb', 'Magellan', 'Marco Polo'],
         correct: 1,
         time: 10
@@ -68,13 +68,13 @@ export const themesData = [
     icon: '⚽',
     questions: [
       {
-        question: 'Combien de joueurs y a-t-il dans une équipe de football ?',
+        question: "Combien de joueurs y a-t-il dans une équipe de football ?",
         answers: ['9', '10', '11', '12'],
         correct: 2,
         time: 10
       },
       {
-        question: 'Où se sont déroulés les JO d\'été 2024 ?',
+        question: "Où se sont déroulés les JO d'été 2024 ?",
         answers: ['Tokyo', 'Paris', 'Los Angeles', 'Londres'],
         correct: 1,
         time: 15

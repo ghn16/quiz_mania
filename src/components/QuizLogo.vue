@@ -14,10 +14,7 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'QuizLogo',
-}
+<script setup>
 </script>
 
 <style scoped>
@@ -77,24 +74,28 @@ export default {
   left: -30px;
   color: #fbbf24;
 }
+
 .logo-icon:nth-child(2) {
   top: -10px;
   right: -30px;
   color: #fff;
   animation-delay: 0.5s;
 }
+
 .logo-icon:nth-child(3) {
   bottom: -20px;
   left: 20%;
   color: #fbbf24;
   animation-delay: 1s;
 }
+
 .logo-icon:nth-child(4) {
   bottom: 30%;
   right: -40px;
   color: #fff;
   animation-delay: 1.5s;
 }
+
 .logo-icon:nth-child(5) {
   top: 40%;
   left: -50px;
@@ -103,8 +104,7 @@ export default {
 }
 
 @keyframes pulse {
-  0%,
-  100% {
+  0%, 100% {
     transform: scale(1);
     opacity: 0.7;
   }
