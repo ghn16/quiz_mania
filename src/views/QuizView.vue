@@ -35,15 +35,23 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onMounted, onBeforeUnmount,ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { quizStore } from '../store/quizStore'
+import { apiGet } from '@/helpears/axiosApi'
 
 const props = defineProps({
   themeId: { type: String, required: true }
 })
 
 const router = useRouter()
+
+const route = useRoute()
+
+const themeQuestion = ref(null)
+
+const themeId = route.params.themeId
+
 
 const currentQuestion = computed(() =>
   quizStore.currentQuestions[quizStore.currentQuestionIndex]
@@ -59,6 +67,17 @@ const getAnswerClass = (index) => {
   if (index === quizStore.selectedAnswer) return 'incorrect'
   return ''
 }
+
+
+ const getThemeIdApi = async(id)=>{
+  const response = await apiGet('http://localhost:8050/api/v1/admin/theme/indexThemeId/' + themeId)
+  themeQuestion.value = response 
+  console.log('themesQuestion.value: ', themeQuestion.value);
+}
+ 
+
+
+
 
 const nextQuestion = () => {
   const hasNext = quizStore.nextQuestion()
@@ -76,7 +95,7 @@ const selectAnswer = (index) => {
   setTimeout(() => nextQuestion(), 1500)
 }
 
-onMounted(() => {
+onMounted(async() => {
   if (!quizStore.currentTheme) {
     const success = quizStore.startQuiz(props.themeId)
     if (!success) {
@@ -87,6 +106,8 @@ onMounted(() => {
   quizStore.startTimer(() => {
     setTimeout(() => nextQuestion(), 1500)
   })
+
+  await getThemeIdApi()
 })
 
 onBeforeUnmount(() => {

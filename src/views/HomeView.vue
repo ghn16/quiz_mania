@@ -1,50 +1,52 @@
 <template>
   <div>
-    <div v-if="quizStore.loading" class="loading">
+    <div v-if="loading" class="loading">
       <div class="spinner"></div>
       <p>Chargement des thèmes...</p>
     </div>
 
-    <div v-else-if="quizStore.error" class="error">
-      <p>{{ quizStore.error }}</p>
-      <button @click="quizStore.loadThemes()" class="btn btn-primary">Réessayer</button>
+     <div class="themes-grid" v-if="themes">
+    <div
+      v-for="theme in themes.data"
+      :key="theme.id"
+      class="theme-card"
+      @click.prevent="getId(theme.id)"
+    >
+      <div class="theme-name"> {{ theme.name }} </div>
+       <div class="theme-info">{{ theme.questions.length }} questions</div>
     </div>
-
-    <!-- Contenu de ThemeSelection intégré -->
-    <div v-else class="themes-grid">
-      <div
-        v-for="theme in quizStore.themes"
-        :key="theme.id"
-        class="theme-card"
-        @click="startQuiz(theme.id)"
-      >
-        <div class="theme-icon">{{ theme.icon }}</div>
-        <div class="theme-name">{{ theme.name }}</div>
-        <div class="theme-info">{{ theme.questions.length }} questions</div>
-      </div>
-    </div>
+  </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { quizStore } from '../store/quizStore'
+import { apiGet } from '../helpears/axiosApi'
 
 const router = useRouter()
+const themes = ref(null)
+const themesId = ref(null)
+const loading = ref()
+
+const getThemeApi = async () => {
+  const response = await apiGet("http://localhost:8050/api/v1/admin/theme/index")
+  themes.value = response
+}
+
+
+const getId = (themeId) =>{
+  router.push('/quiz/' + themeId)
+}
+
 
 onMounted(async () => {
-  await quizStore.loadThemes()
+  loading.value = true
+  await getThemeApi()
+  loading.value = false
+  console.log('themes.value: ', themes.value.data);
 })
 
-const startQuiz = async (themeId) => {
-  const success = await quizStore.startQuiz(themeId)
-  if (success) {
-    router.push(`/quiz/${themeId}`)
-  } else {
-    alert('⚠️ Ce thème ne contient pas encore de questions')
-  }
-}
 </script>
 
 <style scoped>
@@ -80,7 +82,8 @@ const startQuiz = async (themeId) => {
   color: #ef4444;
 }
 
-/* Styles ThemeSelection */
+/* Theme  */
+
 .themes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -120,7 +123,10 @@ const startQuiz = async (themeId) => {
 .theme-card:hover {
   transform: translateY(-15px) scale(1.05);
   border-color: #fbbf24;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(251, 191, 36, 0.4);
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(251, 191, 36, 0.4),
+    inset 0 0 30px rgba(251, 191, 36, 0.1);
 }
 
 .theme-icon {
@@ -137,6 +143,12 @@ const startQuiz = async (themeId) => {
 
 .theme-card:hover .theme-icon {
   animation: spin 0.6s ease;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
 }
 
 .theme-name {
@@ -159,3 +171,4 @@ const startQuiz = async (themeId) => {
   }
 }
 </style>
+
