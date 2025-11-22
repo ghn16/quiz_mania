@@ -10,8 +10,6 @@ export const quizStore = reactive({
   totalQuestions: 0,
   answered: false,
   selectedAnswer: null,
-  showFeedback: false,
-  feedback: '',
   timeLeft: 15,
   timer: null,
   loading: false,
@@ -40,7 +38,6 @@ export const quizStore = reactive({
     this.currentQuestionIndex = 0
     this.answered = false
     this.selectedAnswer = null
-    this.showFeedback = false
     return true
   },
 
@@ -53,15 +50,10 @@ export const quizStore = reactive({
     const correct = this.currentQuestions[this.currentQuestionIndex].correct
     if (index === correct) {
       this.score++
-      this.feedback = '🎉'
-    } else {
-      this.feedback = '😢'
     }
-    this.showFeedback = true
   },
 
   nextQuestion() {
-    this.showFeedback = false
     this.answered = false
     this.selectedAnswer = null
 
@@ -80,8 +72,6 @@ export const quizStore = reactive({
       if (this.timeLeft <= 0) {
         this.stopTimer()
         this.answered = true
-        this.feedback = '⏰'
-        this.showFeedback = true
         callback()
       }
     }, 1000)
@@ -103,8 +93,6 @@ export const quizStore = reactive({
     this.totalQuestions = 0
     this.answered = false
     this.selectedAnswer = null
-    this.showFeedback = false
-    this.feedback = ''
   },
 
   // === GESTION ADMIN ===
