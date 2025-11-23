@@ -1,5 +1,10 @@
 <template>
-  <div v-if="currentQuestion" class="quiz-box">
+    <div v-if="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Chargement des thèmes...</p>
+    </div>
+
+  <div v-if="themeQuestion" class="quiz-box">
     <div class="progress-container">
       <div class="progress-bar">
         <div class="progress-fill" :style="{ width: progress + '%' }"></div>
@@ -9,35 +14,32 @@
     <div class="question-header">
       <div class="score-display">
         <span>🏆</span>
-        <span>{{ quizStore.score }}</span>
+       <!--  <span>{{ quizStore.score }}</span> -->
       </div>
-      <div>Question {{ quizStore.currentQuestionIndex + 1 }}/{{ quizStore.totalQuestions }}</div>
-      <div class="timer-display">{{ quizStore.timeLeft }}s</div>
+      <div>Question {{  }}</div>
+      <div class="timer-display">{{ 15 }}s</div>
     </div>
 
     <div class="question-container">
-      <div class="question-text">{{ currentQuestion.question }}</div>
+      <div class="question-text">{{ themeQuestion.data.questions[currentQuestionIndex].question }}</div>
     </div>
 
-    <div class="answers-container">
+     <div class="answers-container">
       <button
-        v-for="(answer, index) in currentQuestion.answers"
-        :key="index"
-        :disabled="quizStore.answered"
-        :class="getAnswerClass(index)"
+        v-for="(answer,index) in themeQuestion.data.questions[currentQuestionIndex].reponses"
+        :key="answer.id"
         class="answer-btn"
         @click="selectAnswer(index)"
       >
-        {{ answer }}
+        {{answer.name }}
       </button>
-    </div>
+    </div> 
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, onBeforeUnmount,ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { quizStore } from '../store/quizStore'
+import { useRouter,useRoute } from 'vue-router'
 import { apiGet } from '@/helpears/axiosApi'
 
 const props = defineProps({
@@ -47,34 +49,36 @@ const props = defineProps({
 const router = useRouter()
 
 const route = useRoute()
+const currentQuestionIndex = ref(0)
+const loading = ref(false)
+const answerId = ref()
 
 const themeQuestion = ref(null)
 
 const themeId = route.params.themeId
 
+// const currentQuestion = computed(() =>
+//   quizStore.currentQuestions[quizStore.currentQuestionIndex]
+// )
 
-const currentQuestion = computed(() =>
-  quizStore.currentQuestions[quizStore.currentQuestionIndex]
-)
-
+const getThemeIdApi = async(id)=>{
+ const response = await apiGet('http://localhost:8050/api/v1/admin/theme/indexThemeId/' + themeId)
+ themeQuestion.value = response 
+  console.log('themesQuestion.value: ', themeQuestion.value.data.questions[0].reponses[0].id);
+ }
+/* 
 const progress = computed(() =>
   ((quizStore.currentQuestionIndex + 1) / quizStore.totalQuestions) * 100
-)
+)  
 
 const getAnswerClass = (index) => {
   if (!quizStore.answered) return ''
   if (index === currentQuestion.value.correct) return 'correct'
   if (index === quizStore.selectedAnswer) return 'incorrect'
   return ''
-}
+}  
 
 
- const getThemeIdApi = async(id)=>{
-  const response = await apiGet('http://localhost:8050/api/v1/admin/theme/indexThemeId/' + themeId)
-  themeQuestion.value = response 
-  console.log('themesQuestion.value: ', themeQuestion.value);
-}
- 
 
 
 
@@ -89,24 +93,33 @@ const nextQuestion = () => {
     })
   }
 }
+*/
 
-const selectAnswer = (index) => {
-  quizStore.selectAnswer(index)
+const selectAnswer = async (reponseId) => {
+  console.log(reponseId)
+  const response = await themeQuestion.value.data.questions[currentQuestionIndex.value].reponses[reponseId]
+  answerId.value = response
+  console.log(' answerId.value: ',  answerId.value.status);
+
+  if(answerId.value.status == "vrai"){
+    
+  }
+
+
   setTimeout(() => nextQuestion(), 1500)
 }
-
 onMounted(async() => {
-  if (!quizStore.currentTheme) {
+  /* if (!quizStore.currentTheme) {
     const success = quizStore.startQuiz(props.themeId)
     if (!success) {
       router.push('/')
       return
-    }
-  }
-  quizStore.startTimer(() => {
+    } 
+  }*/
+/*   quizStore.startTimer(() => {
     setTimeout(() => nextQuestion(), 1500)
   })
-
+ */
   await getThemeIdApi()
 })
 

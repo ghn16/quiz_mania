@@ -41,7 +41,17 @@ export const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
-  document.title = to.meta.title || 'Quiz Mania'
-  next()
+/* router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem("token")
+  if (to.meta.requiresAuth && !isAuthenticated) {
+
+    next("/")
+  } else if (!to.meta.requiresAuth && isAuthenticated) {
+
+     router.back()
+  }
+  else {
+    next()
+  }
 })
+ */

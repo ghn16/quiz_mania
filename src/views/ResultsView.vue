@@ -16,7 +16,6 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { quizStore } from '../store/quizStore'
 
 const router = useRouter()
 

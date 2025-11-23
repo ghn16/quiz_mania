@@ -11,7 +11,7 @@ const api = axios.create({
 
 // Interceptor pour ajouter le token d'authentification
 api.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem('adminToken')
+  const token = localStorage.getItem('token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -63,12 +63,6 @@ export default {
 
   async deleteQuestion(themeId, questionId) {
     const response = await api.delete(`/themes/${themeId}/questions/${questionId}`)
-    return response.data
-  },
-
-  // ========== AUTHENTIFICATION ==========
-  async login(password) {
-    const response = await api.post('/auth/login', { password })
     return response.data
   },
 
