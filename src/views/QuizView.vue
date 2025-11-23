@@ -1,8 +1,8 @@
 <template>
-    <div v-if="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Chargement des thèmes...</p>
-    </div>
+  <div v-if="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des thèmes...</p>
+  </div>
 
   <div v-if="themeQuestion" class="quiz-box">
     <div class="progress-container">
@@ -14,37 +14,46 @@
     <div class="question-header">
       <div class="score-display">
         <span>🏆</span>
-       <!--  <span>{{ quizStore.score }}</span> -->
+          <span>{{ quizScore.score }}</span> 
       </div>
-      <div>Question {{  }}</div>
-      <div class="timer-display">{{ 15 }}s</div>
+      <div>Question {{ currentQuestionIndex + 1 }} / {{ themeQuestion.data.questions.length }}</div>
+      <div class="timer-display">{{ timeGo }}s</div>
     </div>
 
     <div class="question-container">
-      <div class="question-text">{{ themeQuestion.data.questions[currentQuestionIndex].question }}</div>
+      <div class="question-text">
+        {{ themeQuestion.data.questions[currentQuestionIndex].question }}
+      </div>
     </div>
 
-     <div class="answers-container">
+    <div class="answers-container">
       <button
-        v-for="(answer,index) in themeQuestion.data.questions[currentQuestionIndex].reponses"
-        :key="answer.id"
+        v-for="(reponse, index) in themeQuestion.data.questions[currentQuestionIndex].reponses"
+        :key="reponse.id"
         class="answer-btn"
-        @click="selectAnswer(index)"
+        :class="{
+          correct: reponse.status === correctReponseId, 
+          incorrect: reponse.id === selectAnswerId && reponse.id !== correctReponseId, 
+        }"
+        @click="selectAnswer(reponse)"
       >
-        {{answer.name }}
+        {{ reponse.name }}
       </button>
-    </div> 
+      {{ correctReponseId }}
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onBeforeUnmount,ref } from 'vue'
-import { useRouter,useRoute } from 'vue-router'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { apiGet } from '@/helpears/axiosApi'
+import { useScoreStore } from '@/store/score.js'
 
-const props = defineProps({
-  themeId: { type: String, required: true }
-})
+const quizScore = useScoreStore()
+
+quizScore.score = 0
+
 
 const router = useRouter()
 
@@ -52,79 +61,99 @@ const route = useRoute()
 const currentQuestionIndex = ref(0)
 const loading = ref(false)
 const answerId = ref()
+const selectAnswerId = ref()
+const correctReponseId = ref(null)
+
 
 const themeQuestion = ref(null)
+const longQuestion = ref()
 
 const themeId = route.params.themeId
+const timeGo = ref(15)
+let interval = null
 
-// const currentQuestion = computed(() =>
-//   quizStore.currentQuestions[quizStore.currentQuestionIndex]
-// )
+const startTimer = () => {
 
-const getThemeIdApi = async(id)=>{
- const response = await apiGet('http://localhost:8050/api/v1/admin/theme/indexThemeId/' + themeId)
- themeQuestion.value = response 
-  console.log('themesQuestion.value: ', themeQuestion.value.data.questions[0].reponses[0].id);
- }
-/* 
-const progress = computed(() =>
-  ((quizStore.currentQuestionIndex + 1) / quizStore.totalQuestions) * 100
-)  
-
-const getAnswerClass = (index) => {
-  if (!quizStore.answered) return ''
-  if (index === currentQuestion.value.correct) return 'correct'
-  if (index === quizStore.selectedAnswer) return 'incorrect'
-  return ''
-}  
+  timeGo.value = 15
 
 
+  if (interval) clearInterval(interval)
 
+  interval = setInterval(() => {
+    timeGo.value--
 
-
-
-const nextQuestion = () => {
-  const hasNext = quizStore.nextQuestion()
-  if (!hasNext) {
-    router.push('/results')
-  } else {
-    quizStore.startTimer(() => {
-      setTimeout(() => nextQuestion(), 1500)
-    })
-  }
+    if (timeGo.value <= 0) {
+      clearInterval(interval)
+      nextQuestion()
+    }
+  }, 1000) 
 }
-*/
 
-const selectAnswer = async (reponseId) => {
-  console.log(reponseId)
-  const response = await themeQuestion.value.data.questions[currentQuestionIndex.value].reponses[reponseId]
-  answerId.value = response
-  console.log(' answerId.value: ',  answerId.value.status);
-
-  if(answerId.value.status == "vrai"){
-    
+const stopTimer = () => {
+  if (interval) {
+    clearInterval(interval)
+    interval = null
   }
 
+  setTimeout(() => {
+    nextQuestion()
+  }, 1000)
+}
+
+ const getThemeIdApi = async (id) => {
+  const response = await apiGet('http://localhost:8050/api/v1/admin/theme/indexThemeId/' + themeId)
+  themeQuestion.value = response
+  longQuestion.value = themeQuestion.value.data.questions.length
+  return longQuestion
+  console.log('themesQuestion.value: ', themeQuestion.value.data.questions[0].reponses[0].id)
+}
+
+ const nextQuestion = async () => {
+   
+   console.log('longQuestion.value: ', longQuestion.value)
+   console.log('currentQuestionIndex.value : ', currentQuestionIndex.value +1);
+   currentQuestionIndex.value++
+   
+    if (currentQuestionIndex.value +1 > longQuestion.value) {
+       await new Promise(resolve => setTimeout(resolve, 50))
+    router.push('/resultat/' + themeId)
+    interval.value = null
+  }
+  startTimer() 
+}
+
+const selectAnswer = async (reponse) => {
+  stopTimer()
+  selectAnswerId.value = reponse.status
+  console.log(selectAnswerId)
+  const response =
+    await themeQuestion.value.data.questions[currentQuestionIndex.value].reponses[reponse.id - 1]
+  answerId.value = response
+  console.log(' answerId.value: ', answerId.value)
+  const correct = await themeQuestion.value.data.questions[
+    currentQuestionIndex.value
+  ].reponses.find((r) => r.status === 'vrai')
+  correctReponseId.value = correct.status
+
+  if (answerId.value.status !== 'vrai') {
+    console.log(answerId.value.id)
+    return (selectAnswerId.value = answerId.value.id)
+  } else if (answerId.value.status === 'vrai') {
+    console.log('fvyjhfvugv')
+   quizScore.score += 1
+    return correctReponseId.value
+  }
 
   setTimeout(() => nextQuestion(), 1500)
 }
-onMounted(async() => {
-  /* if (!quizStore.currentTheme) {
-    const success = quizStore.startQuiz(props.themeId)
-    if (!success) {
-      router.push('/')
-      return
-    } 
-  }*/
-/*   quizStore.startTimer(() => {
-    setTimeout(() => nextQuestion(), 1500)
-  })
- */
+onMounted(async () => {
+
+  startTimer()
   await getThemeIdApi()
 })
 
 onBeforeUnmount(() => {
-  quizStore.stopTimer()
+  stopTimer()
 })
 </script>
 
@@ -140,8 +169,14 @@ onBeforeUnmount(() => {
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(-30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .progress-container {
@@ -168,8 +203,12 @@ onBeforeUnmount(() => {
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .question-header {
@@ -200,8 +239,13 @@ onBeforeUnmount(() => {
 }
 
 @keyframes timerPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 .question-container {

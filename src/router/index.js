@@ -19,8 +19,8 @@ const routes = [
     meta: { title: 'Quiz en cours' }
   },
   {
-    path: '/results',
-    name: 'results',
+    path: '/resultat/:themeId',
+    name: 'resultat',
     component: ResultsView,
     meta: { title: 'Résultats' }
   },

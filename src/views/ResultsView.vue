@@ -1,26 +1,56 @@
 <template>
-  <div class="quiz-box results-box">
+  <div v-if="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement du resultat...</p>
+  </div>
+  <div class="quiz-box results-box" v-if="themeQuestion">
     <h2 class="results-title">Quiz Terminé!</h2>
     <div class="results-emoji">{{ resultEmoji }}</div>
-    <div class="results-score">{{ quizStore.score }}/{{ quizStore.totalQuestions }}</div>
-    <p class="results-percentage">{{ percentage }}% de réussite</p>
-    <button class="btn btn-primary" @click="backToThemes">
-      🏠 Retour aux thèmes
-    </button>
-    <button class="btn btn-secondary" @click="restart">
-      🔄 Recommencer
+    <div class="results-score">{{ quizScore.score }} / {{ longQuestion }}</div>
+     <p class="results-percentage">{{ percentage }}% de réussite</p>
+    <button class="btn btn-primary" @click.prevent="retourTheme">
+       Retour aux thèmes
+    </button> 
+    <button class="btn btn-secondary" @click.prevent="restart">
+       Recommencer
     </button>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted,ref } from 'vue'
+import { useRouter,useRoute } from 'vue-router'
+import { useScoreStore } from '@/store/score'
+import { apiGet } from '@/helpears/axiosApi'
+
+
+const quizScore = useScoreStore()
 
 const router = useRouter()
+const route = useRoute()
+const datas = ref(null)
+const themeQuestion = ref(null)
+const longQuestion = ref()
+const loading = ref(false)
+const themeId = route.params.themeId
 
-const percentage = computed(() =>
-  Math.round((quizStore.score / quizStore.totalQuestions) * 100)
+
+ const getThemeIdApi = async () => {
+
+  loading.value = true
+
+  const response = await apiGet('http://localhost:8050/api/v1/admin/theme/indexThemeId/' + themeId)
+  themeQuestion.value = response.data
+  console.log(' themeQuestion.value: ',  themeQuestion.value);
+  longQuestion.value = await  themeQuestion.value.questions.length
+  console.log('longQuestion.value: ', longQuestion.value);
+
+  loading.value = false
+
+}
+
+ const percentage = computed(() =>
+  Math.round((quizScore.score / longQuestion.value) * 100)
 )
 
 const resultEmoji = computed(() => {
@@ -32,16 +62,17 @@ const resultEmoji = computed(() => {
   return '😢'
 })
 
-const restart = () => {
-  const themeId = quizStore.currentTheme.id
-  quizStore.resetQuiz()
-  router.push(`/quiz/${themeId}`)
+ const restart = () => {
+  router.push('/quiz/' + themeId)
 }
 
-const backToThemes = () => {
-  quizStore.resetQuiz()
+const retourTheme = () => {
   router.push('/')
-}
+} 
+ 
+onMounted(async()=>{
+  await getThemeIdApi()
+})
 </script>
 
 <style scoped>
