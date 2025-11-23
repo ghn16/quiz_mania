@@ -7,7 +7,7 @@
     <h2 class="results-title">Quiz Terminé!</h2>
     <div class="results-emoji">{{ resultEmoji }}</div>
     <div class="results-score">{{ quizScore.score }} / {{ longQuestion }}</div>
-     <p class="results-percentage">{{ percentage }}% de réussite</p>
+     <p class="results-percentage">{{ pourcen }}% de réussite</p>
     <button class="btn btn-primary" @click.prevent="retourTheme">
        Retour aux thèmes
     </button> 
@@ -49,12 +49,12 @@ const themeId = route.params.themeId
 
 }
 
- const percentage = computed(() =>
+ const pourcen = computed(() =>
   Math.round((quizScore.score / longQuestion.value) * 100)
 )
 
 const resultEmoji = computed(() => {
-  const p = percentage.value
+  const p = pourcen.value
   if (p === 100) return '🏆'
   if (p >= 80) return '🎉'
   if (p >= 60) return '😊'
@@ -69,7 +69,8 @@ const resultEmoji = computed(() => {
 const retourTheme = () => {
   router.push('/')
 } 
- 
+
+
 onMounted(async()=>{
   await getThemeIdApi()
 })
@@ -120,7 +121,7 @@ onMounted(async()=>{
   margin: 30px 0;
 }
 
-.results-percentage {
+.results-pourcen {
   font-size: 1.8em;
   color: #64748b;
   margin: 20px 0 40px;

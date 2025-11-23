@@ -7,7 +7,7 @@
   <div v-if="themeQuestion" class="quiz-box">
     <div class="progress-container">
       <div class="progress-bar">
-        <div class="progress-fill" :style="{ width: progress + '%' }"></div>
+        <div class="progress-fill" :style="{ width: progressBar + '%' }"></div>
       </div>
     </div>
 
@@ -75,6 +75,13 @@ let interval = null
 const startTimer = () => {
 
   timeGo.value = 15
+
+
+const progressBar = computed(() => {
+  if (longQuestion.value === 0) return 0
+  return Math.round(((currentQuestionIndex.value + 1) / longQuestion.value) * 100)
+})
+
 
 
   if (interval) clearInterval(interval)
