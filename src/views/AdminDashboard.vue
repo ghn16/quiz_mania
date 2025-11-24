@@ -1,27 +1,87 @@
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter,useRoute } from 'vue-router'
+import { apiPost,apiGet } from '@/helpears/axiosApi'
+
+const themeQuestion = ref()
+const loading = ref()
+const router = useRouter()
+const route = useRoute()
+const nameTheme = ref()
+const themeAdd = ref()
+const ThemeEdit = ref()
+const question = ref(false)
+const displayBtnEdit = ref(false)
+
+const id = route.query.id
+
+
+
+const questionFunction = ()=>{
+  console.log("jai ete checker")
+  question.value =true
+}
+
+/*Api pour les themes et question assossie*/
+const apiGetThemeQuestion =async () =>{
+  const response = await apiGet("http://localhost:8050/api/v1/admin/theme/index")
+  themeQuestion.value = response.data
+  console.log(' themeQuestion.value: ',  themeQuestion.value);
+}
+
+/* Api ajouter theme */
+
+const apiAjoutTheme = async()=>{
+    const response = await apiPost("http://localhost:8050/api/v1/admin/theme/store",{name:nameTheme.value})
+  themeAdd.value = response
+}
+
+/* Api recuperer theme a edit */
+const ApiEditTheme = async(theme)=>{
+  displayBtnEdit.value = true
+    const response = await apiGet("http://localhost:8050/api/v1/admin/theme/edit/" + theme.id)
+  nameTheme.value = theme.name
+ router.push(`/admin/dashboard?id=${theme.id}`)
+  console.log('nameTheme.value: ', nameTheme.value);
+}
+
+/* Api Modify theme */
+
+const ApiModifyTheme = async()=>{
+  displayBtnEdit.value = true
+    const response = await apiPost("http://localhost:8050/api/v1/admin/theme/update/" + id, {name:nameTheme.value})
+  ThemeEdit.value = response.data
+  console.log('ThemeEdit.value: ', ThemeEdit.value);
+}
+
+
+onMounted(()=>{
+  apiGetThemeQuestion()
+  displayBtnEdit.value = false
+})
+</script>
 <template>
-  <div class="admin-wrapper">
-   
-   
+  <div class="admin-wrapper" v-if="themeQuestion">
     <div class="admin-panel">
       <div class="admin-header">
-        <h2 class="admin-title">🔧 Administration</h2>
+        <h2 class="admin-title"> Administration</h2>
         <div class="header-actions">
-          <button @click="goHome" class="btn btn-secondary btn-small">🏠 Accueil</button>
-          <button @click="logout" class="btn btn-danger btn-small">🚪 Déconnexion</button>
+          <button @click="goHome" class="btn btn-primary btn-small"> Accueil</button>
+          <button @click="logout" class="btn btn-danger btn-small"> Déconnexion</button>
         </div>
       </div>
 
       <div class="tabs-container">
         <button
           @click="activeTab = 'themes'"
-          :class="{ active: activeTab === 'themes' }"
-          class="tab-btn"
+         
+          class="tab-btn active"
         >
-          📁 Thèmes
+           Thèmes
         </button>
         <button
-          @click="activeTab = 'questions'"
-          :class="{ active: activeTab === 'questions' }"
+          @click="questionFunction"
+        
           class="tab-btn"
         >
           ❓ Questions
@@ -29,40 +89,41 @@
       </div>
 
       <!-- ONGLET THÈMES -->
-      <div v-if="activeTab === 'themes'" class="tab-content">
+      <div class="tab-content">
         <div class="section">
           <h3 class="section-title">
-            {{ editingTheme ? '✏️ Modifier le thème' : '➕ Ajouter un thème' }}
+            {{ displayBtnEdit ? ' Modifier le thème' : ' Ajouter un thème' }}
           </h3>
           <div class="form-row">
-            <div class="form-group flex-1">
+            <div class="form-group flex-1" >
               <label>Nom du thème</label>
-              <input placeholder="Ex: Géographie" />
+              <input placeholder="Ex: Géographie"  v-model="nameTheme"/>
             </div>
-            
           </div>
           <div class="form-actions">
-            <button  @click="cancelEditTheme" class="btn btn-secondary">
-              Annuler
+<!--             <button @click="cancelEditTheme" class="btn btn-secondary">Annuler</button>
+ -->            <button @click.prevent="apiAjoutTheme" class="btn btn-primary">
+               Ajouter
             </button>
-            <button @click="submitTheme" class="btn btn-primary">
-              {{ editingTheme ? '💾 Sauvegarder' : '➕ Ajouter' }}
+          </div>
+          <div class="form-actions">
+           <button @click.prevent="ApiModifyTheme(nameTheme.id)" v-if="displayBtnEdit" class="btn btn-secondary">
+              Sauvegarder
             </button>
           </div>
         </div>
 
         <div class="section">
-          <h3 class="section-title">📋 Thèmes existants ({{  }})</h3>
-          <div  class="empty-state">Aucun thème créé.</div>
-          <div  class="list-item">
+          <h3 class="section-title"> Thèmes existants ({{themeQuestion.length}})</h3>
+          <div class="list-item" v-for="theme in themeQuestion">
             <div class="list-item-content">
               <div class="list-details">
-                <strong class="list-name">{{  }}</strong>
-                <span class="list-info">{{ }} questions</span>
+                <strong class="list-name">{{theme.name}}</strong>
+                <span class="list-info">{{theme.questions.length}} questions</span>
               </div>
             </div>
             <div class="list-actions">
-              <button @click="editTheme(theme)" class="btn btn-warning btn-icon">✏️</button>
+              <button @click="ApiEditTheme(theme)" class="btn btn-warning btn-icon">Modifier</button>
               <button @click="confirmDeleteTheme(theme.id)" class="btn btn-danger btn-icon">
                 🗑️
               </button>
@@ -72,7 +133,7 @@
       </div>
 
       <!-- ONGLET QUESTIONS -->
-      <div v-if="activeTab === 'questions'" class="tab-content">
+      <div v-if="question == 'true'" class="tab-content">
         <div class="section">
           <h3 class="section-title">
             {{ editingQuestion ? '✏️ Modifier la question' : '➕ Ajouter une question' }}
@@ -203,163 +264,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { apiPost } from '@/helpears/axiosApi'
-
-const router = useRouter()
-const password = ref()
-const email = ref()
-const errorMessage = ref('')
-
-const datas = ref()
-const activeTab = ref('themes')
-const expandedThemes = ref([])
-const showConfirmModal = ref(false)
-const confirmModal = reactive({ title: '', message: '', action: null })
-
-// Thème
-const editingTheme = ref(null)
-const themeForm = reactive({ name: '', icon: '' })
-
-// Question
-const editingQuestion = ref(null)
-const questionForm = reactive({
-  themeId: '',
-  question: '',
-  answers: ['', '', '', ''],
-  correct: 0,
-  time: 15,
-})
-
-
-const login = async () => {
-  const response = await apiPost('http://localhost:8050/api/login', {
-    email: email.value,
-    password: password.value,
-  })
-  datas.value = response
-   localStorage.setItem('user', JSON.stringify(datas.value.data.data))
-  localStorage.setItem('token', datas.value.data.access_token)
-
-  console.log('datas.value: ', datas.value.data)
-}
-
-const logout = () => {
-  localStorage.removeItem("token")
-  localStorage.removeItem("user")
- router.push("/admin")
-}
-
-
-// === THÈMES ===
-const submitTheme = () => {
-  if (!themeForm.name || !themeForm.icon) return alert('⚠️ Remplissez tous les champs')
-  if (editingTheme.value) {
-    quizStore.updateTheme(editingTheme.value, { ...themeForm })
-    editingTheme.value = null
-  } else {
-    quizStore.addTheme({ ...themeForm })
-  }
-  themeForm.name = ''
-  themeForm.icon = ''
-}
-
-const editTheme = (theme) => {
-  editingTheme.value = theme.id
-  themeForm.name = theme.name
-  themeForm.icon = theme.icon
-}
-
-const cancelEditTheme = () => {
-  editingTheme.value = null
-  themeForm.name = ''
-  themeForm.icon = ''
-}
-
-const confirmDeleteTheme = (id) => {
-  const theme = quizStore.themes.find((t) => t.id === id)
-  confirmModal.title = '🗑️ Supprimer le thème'
-  confirmModal.message = `Supprimer "${theme?.name}" et toutes ses questions ?`
-  confirmModal.action = () => {
-    quizStore.deleteTheme(id)
-    showConfirmModal.value = false
-  }
-  showConfirmModal.value = true
-}
-
-// === QUESTIONS ===
-const submitQuestion = () => {
-  if (
-    !questionForm.themeId ||
-    !questionForm.question ||
-    questionForm.answers.some((a) => !a.trim())
-  ) {
-    return alert('⚠️ Remplissez tous les champs')
-  }
-  const data = {
-    themeId: questionForm.themeId,
-    question: questionForm.question,
-    answers: [...questionForm.answers],
-    correct: questionForm.correct,
-    time: questionForm.time,
-  }
-  if (editingQuestion.value) {
-    quizStore.updateQuestion(editingQuestion.value.themeId, editingQuestion.value.index, data)
-    editingQuestion.value = null
-  } else {
-    quizStore.addQuestion(data)
-  }
-  resetQuestionForm()
-}
-
-const editQuestion = (themeId, index, q) => {
-  editingQuestion.value = { themeId, index }
-  questionForm.themeId = themeId
-  questionForm.question = q.question
-  questionForm.answers = [...q.answers]
-  questionForm.correct = q.correct
-  questionForm.time = q.time
-}
-
-const cancelEditQuestion = () => {
-  editingQuestion.value = null
-  resetQuestionForm()
-}
-
-const resetQuestionForm = () => {
-  questionForm.question = ''
-  questionForm.answers = ['', '', '', '']
-  questionForm.correct = 0
-  questionForm.time = 15
-}
-
-const confirmDeleteQuestion = (themeId, index) => {
-  confirmModal.title = '🗑️ Supprimer la question'
-  confirmModal.message = 'Supprimer cette question ?'
-  confirmModal.action = () => {
-    quizStore.deleteQuestion(themeId, index)
-    showConfirmModal.value = false
-  }
-  showConfirmModal.value = true
-}
-
-const addAnswer = () => {
-  if (questionForm.answers.length < 6) questionForm.answers.push('')
-}
-const removeAnswer = (index) => {
-  questionForm.answers.splice(index, 1)
-  if (questionForm.correct >= questionForm.answers.length) questionForm.correct = 0
-}
-
-const toggleTheme = (id) => {
-  const idx = expandedThemes.value.indexOf(id)
-  if (idx === -1) expandedThemes.value.push(id)
-  else expandedThemes.value.splice(idx, 1)
-}
-</script>
 
 <style scoped>
 .admin-wrapper {

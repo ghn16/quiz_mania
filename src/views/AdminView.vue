@@ -1,3 +1,161 @@
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { apiPost } from '@/helpears/axiosApi'
+
+const router = useRouter()
+const password = ref()
+const email = ref()
+const errorMessage = ref('')
+const isAuthenticated = ref(false)
+const datas = ref()
+const activeTab = ref('themes')
+const expandedThemes = ref([])
+const showConfirmModal = ref(false)
+const confirmModal = reactive({ title: '', message: '', action: null })
+
+// Thème
+const editingTheme = ref(null)
+const themeForm = reactive({ name: '', icon: '' })
+
+// Question
+const editingQuestion = ref(null)
+const questionForm = reactive({
+  themeId: '',
+  question: '',
+  answers: ['', '', '', ''],
+  correct: 0,
+  time: 15,
+})
+
+onMounted(() => {
+  isAuthenticated.value = localStorage.getItem('token')
+})
+
+const login = async () => {
+  const response = await apiPost('http://localhost:8050/api/login', {
+    email: email.value,
+    password: password.value,
+  })
+  datas.value = response
+  localStorage.setItem('user', JSON.stringify(datas.value.data.data))
+  localStorage.setItem('token', datas.value.data.access_token)
+
+  console.log('datas.value: ', datas.value.data)
+}
+
+const logout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  router.push('/admin')
+}
+
+// === THÈMES ===
+const submitTheme = () => {
+  if (!themeForm.name || !themeForm.icon) return alert('⚠️ Remplissez tous les champs')
+  if (editingTheme.value) {
+    quizStore.updateTheme(editingTheme.value, { ...themeForm })
+    editingTheme.value = null
+  } else {
+    quizStore.addTheme({ ...themeForm })
+  }
+  themeForm.name = ''
+  themeForm.icon = ''
+}
+
+const editTheme = (theme) => {
+  editingTheme.value = theme.id
+  themeForm.name = theme.name
+  themeForm.icon = theme.icon
+}
+
+const cancelEditTheme = () => {
+  editingTheme.value = null
+  themeForm.name = ''
+  themeForm.icon = ''
+}
+
+const confirmDeleteTheme = (id) => {
+  const theme = quizStore.themes.find((t) => t.id === id)
+  confirmModal.title = '🗑️ Supprimer le thème'
+  confirmModal.message = `Supprimer "${theme?.name}" et toutes ses questions ?`
+  confirmModal.action = () => {
+    quizStore.deleteTheme(id)
+    showConfirmModal.value = false
+  }
+  showConfirmModal.value = true
+}
+
+// === QUESTIONS ===
+const submitQuestion = () => {
+  if (
+    !questionForm.themeId ||
+    !questionForm.question ||
+    questionForm.answers.some((a) => !a.trim())
+  ) {
+    return alert('⚠️ Remplissez tous les champs')
+  }
+  const data = {
+    themeId: questionForm.themeId,
+    question: questionForm.question,
+    answers: [...questionForm.answers],
+    correct: questionForm.correct,
+    time: questionForm.time,
+  }
+  if (editingQuestion.value) {
+    quizStore.updateQuestion(editingQuestion.value.themeId, editingQuestion.value.index, data)
+    editingQuestion.value = null
+  } else {
+    quizStore.addQuestion(data)
+  }
+  resetQuestionForm()
+}
+
+const editQuestion = (themeId, index, q) => {
+  editingQuestion.value = { themeId, index }
+  questionForm.themeId = themeId
+  questionForm.question = q.question
+  questionForm.answers = [...q.answers]
+  questionForm.correct = q.correct
+  questionForm.time = q.time
+}
+
+const cancelEditQuestion = () => {
+  editingQuestion.value = null
+  resetQuestionForm()
+}
+
+const resetQuestionForm = () => {
+  questionForm.question = ''
+  questionForm.answers = ['', '', '', '']
+  questionForm.correct = 0
+  questionForm.time = 15
+}
+
+const confirmDeleteQuestion = (themeId, index) => {
+  confirmModal.title = '🗑️ Supprimer la question'
+  confirmModal.message = 'Supprimer cette question ?'
+  confirmModal.action = () => {
+    quizStore.deleteQuestion(themeId, index)
+    showConfirmModal.value = false
+  }
+  showConfirmModal.value = true
+}
+
+const addAnswer = () => {
+  if (questionForm.answers.length < 6) questionForm.answers.push('')
+}
+const removeAnswer = (index) => {
+  questionForm.answers.splice(index, 1)
+  if (questionForm.correct >= questionForm.answers.length) questionForm.correct = 0
+}
+
+const toggleTheme = (id) => {
+  const idx = expandedThemes.value.indexOf(id)
+  if (idx === -1) expandedThemes.value.push(id)
+  else expandedThemes.value.splice(idx, 1)
+}
+</script>
 <template>
   <div class="admin-wrapper">
     <!-- Écran de connexion -->
@@ -231,166 +389,6 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { apiPost } from '@/helpears/axiosApi'
-
-const router = useRouter()
-const password = ref()
-const email = ref()
-const errorMessage = ref('')
-const isAuthenticated = ref(false)
-const datas = ref()
-const activeTab = ref('themes')
-const expandedThemes = ref([])
-const showConfirmModal = ref(false)
-const confirmModal = reactive({ title: '', message: '', action: null })
-
-// Thème
-const editingTheme = ref(null)
-const themeForm = reactive({ name: '', icon: '' })
-
-// Question
-const editingQuestion = ref(null)
-const questionForm = reactive({
-  themeId: '',
-  question: '',
-  answers: ['', '', '', ''],
-  correct: 0,
-  time: 15,
-})
-
-onMounted(() => {
-  isAuthenticated.value = localStorage.getItem('token')
-})
-
-const login = async () => {
-  const response = await apiPost('http://localhost:8050/api/login', {
-    email: email.value,
-    password: password.value,
-  })
-  datas.value = response
-   localStorage.setItem('user', JSON.stringify(datas.value.data.data))
-  localStorage.setItem('token', datas.value.data.access_token)
-
-  console.log('datas.value: ', datas.value.data)
-}
-
-const logout = () => {
-  localStorage.removeItem("token")
-  localStorage.removeItem("user")
- router.push("/admin")
-}
-
-
-// === THÈMES ===
-const submitTheme = () => {
-  if (!themeForm.name || !themeForm.icon) return alert('⚠️ Remplissez tous les champs')
-  if (editingTheme.value) {
-    quizStore.updateTheme(editingTheme.value, { ...themeForm })
-    editingTheme.value = null
-  } else {
-    quizStore.addTheme({ ...themeForm })
-  }
-  themeForm.name = ''
-  themeForm.icon = ''
-}
-
-const editTheme = (theme) => {
-  editingTheme.value = theme.id
-  themeForm.name = theme.name
-  themeForm.icon = theme.icon
-}
-
-const cancelEditTheme = () => {
-  editingTheme.value = null
-  themeForm.name = ''
-  themeForm.icon = ''
-}
-
-const confirmDeleteTheme = (id) => {
-  const theme = quizStore.themes.find((t) => t.id === id)
-  confirmModal.title = '🗑️ Supprimer le thème'
-  confirmModal.message = `Supprimer "${theme?.name}" et toutes ses questions ?`
-  confirmModal.action = () => {
-    quizStore.deleteTheme(id)
-    showConfirmModal.value = false
-  }
-  showConfirmModal.value = true
-}
-
-// === QUESTIONS ===
-const submitQuestion = () => {
-  if (
-    !questionForm.themeId ||
-    !questionForm.question ||
-    questionForm.answers.some((a) => !a.trim())
-  ) {
-    return alert('⚠️ Remplissez tous les champs')
-  }
-  const data = {
-    themeId: questionForm.themeId,
-    question: questionForm.question,
-    answers: [...questionForm.answers],
-    correct: questionForm.correct,
-    time: questionForm.time,
-  }
-  if (editingQuestion.value) {
-    quizStore.updateQuestion(editingQuestion.value.themeId, editingQuestion.value.index, data)
-    editingQuestion.value = null
-  } else {
-    quizStore.addQuestion(data)
-  }
-  resetQuestionForm()
-}
-
-const editQuestion = (themeId, index, q) => {
-  editingQuestion.value = { themeId, index }
-  questionForm.themeId = themeId
-  questionForm.question = q.question
-  questionForm.answers = [...q.answers]
-  questionForm.correct = q.correct
-  questionForm.time = q.time
-}
-
-const cancelEditQuestion = () => {
-  editingQuestion.value = null
-  resetQuestionForm()
-}
-
-const resetQuestionForm = () => {
-  questionForm.question = ''
-  questionForm.answers = ['', '', '', '']
-  questionForm.correct = 0
-  questionForm.time = 15
-}
-
-const confirmDeleteQuestion = (themeId, index) => {
-  confirmModal.title = '🗑️ Supprimer la question'
-  confirmModal.message = 'Supprimer cette question ?'
-  confirmModal.action = () => {
-    quizStore.deleteQuestion(themeId, index)
-    showConfirmModal.value = false
-  }
-  showConfirmModal.value = true
-}
-
-const addAnswer = () => {
-  if (questionForm.answers.length < 6) questionForm.answers.push('')
-}
-const removeAnswer = (index) => {
-  questionForm.answers.splice(index, 1)
-  if (questionForm.correct >= questionForm.answers.length) questionForm.correct = 0
-}
-
-const toggleTheme = (id) => {
-  const idx = expandedThemes.value.indexOf(id)
-  if (idx === -1) expandedThemes.value.push(id)
-  else expandedThemes.value.splice(idx, 1)
-}
-</script>
 
 <style scoped>
 .admin-wrapper {
