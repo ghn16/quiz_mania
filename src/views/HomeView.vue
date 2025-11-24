@@ -1,24 +1,3 @@
-<template>
-  <div>
-    <div v-if="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Chargement des thèmes...</p>
-    </div>
-
-     <div class="themes-grid" v-if="themes">
-    <div
-      v-for="theme in themes.data"
-      :key="theme.id"
-      class="theme-card"
-      @click.prevent="getId(theme.id)"
-    >
-      <div class="theme-name"> {{ theme.name }} </div>
-       <div class="theme-info">{{ theme.questions.length }} questions</div>
-    </div>
-  </div>
-  </div>
-</template>
-
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -48,6 +27,27 @@ onMounted(async () => {
 })
 
 </script>
+<template>
+  <div>
+    <div v-if="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Chargement des thèmes...</p>
+    </div>
+
+     <div class="themes-grid" v-if="themes">
+    <div
+      v-for="theme in themes.data"
+      :key="theme.id"
+      class="theme-card"
+      @click.prevent="getId(theme.id)"
+    >
+      <div class="theme-name"> {{ theme.name }} </div>
+       <div class="theme-info">{{ theme.questions.length }} questions</div>
+    </div>
+  </div>
+  </div>
+</template>
+
 
 <style scoped>
 .loading {

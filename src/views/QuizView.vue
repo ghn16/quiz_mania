@@ -1,49 +1,3 @@
-<template>
-  <div v-if="loading" class="loading">
-    <div class="spinner"></div>
-    <p>Chargement des thèmes...</p>
-  </div>
-
-  <div v-if="themeQuestion" class="quiz-box">
-    <div class="progress-container">
-      <div class="progress-bar">
-        <div class="progress-fill" :style="{ width: progressBar + '%' }"></div>
-      </div>
-    </div>
-
-    <div class="question-header">
-      <div class="score-display">
-        <span>🏆</span>
-          <span>{{ quizScore.score }}</span> 
-      </div>
-      <div>Question {{ currentQuestionIndex + 1 }} / {{ themeQuestion.data.questions.length }}</div>
-      <div class="timer-display">{{ timeGo }}s</div>
-    </div>
-
-    <div class="question-container">
-      <div class="question-text">
-        {{ themeQuestion.data.questions[currentQuestionIndex].question }}
-      </div>
-    </div>
-
-    <div class="answers-container">
-        <button
-          v-for="(reponse, index) in themeQuestion.data.questions[currentQuestionIndex].reponses"
-          :key="reponse.id"
-          class="answer-btn"
-          :class="{
-            correct: reponse.id === correctReponseId, 
-            incorrect: reponse.id === selectAnswerId && reponse.id !== correctReponseId, 
-          }"
-          @click="selectAnswer(reponse)"
-        >
-          {{ reponse.name }}
-        </button>
-      {{ correctReponseId }}
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -165,6 +119,52 @@ onMounted( () => {
 
 
 </script>
+<template>
+  <div v-if="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des thèmes...</p>
+  </div>
+
+  <div v-if="themeQuestion" class="quiz-box">
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" :style="{ width: progressBar + '%' }"></div>
+      </div>
+    </div>
+
+    <div class="question-header">
+      <div class="score-display">
+        <span>🏆</span>
+          <span>{{ quizScore.score }}</span> 
+      </div>
+      <div>Question {{ currentQuestionIndex + 1 }} / {{ themeQuestion.data.questions.length }}</div>
+      <div class="timer-display">{{ timeGo }}s</div>
+    </div>
+
+    <div class="question-container">
+      <div class="question-text">
+        {{ themeQuestion.data.questions[currentQuestionIndex].question }}
+      </div>
+    </div>
+
+    <div class="answers-container">
+        <button
+          v-for="(reponse, index) in themeQuestion.data.questions[currentQuestionIndex].reponses"
+          :key="reponse.id"
+          class="answer-btn"
+          :class="{
+            correct: reponse.id === correctReponseId, 
+            incorrect: reponse.id === selectAnswerId && reponse.id !== correctReponseId, 
+          }"
+          @click="selectAnswer(reponse)"
+        >
+          {{ reponse.name }}
+        </button>
+      {{ correctReponseId }}
+    </div>
+  </div>
+</template>
+
 
 <style scoped>
 .quiz-box {

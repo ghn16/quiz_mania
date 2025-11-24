@@ -1,22 +1,3 @@
-<template>
-  <div v-if="loading" class="loading">
-    <div class="spinner"></div>
-    <p>Chargement du resultat...</p>
-  </div>
-  <div class="quiz-box results-box" v-else>
-    <h2 class="results-title">Quiz Terminé!</h2>
-    <div class="results-emoji">{{ resultEmoji }}</div>
-    <div class="results-score">{{ quizScore.score }} / {{ longQuestion }}</div>
-     <p class="results-percentage">{{ pourcen }}% de réussite</p>
-    <button class="btn btn-primary" @click.prevent="retourTheme">
-       Retour aux thèmes
-    </button> 
-    <button class="btn btn-secondary" @click.prevent="restart">
-       Recommencer
-    </button>
-  </div>
-</template>
-
 <script setup>
 import { computed, onMounted,ref } from 'vue'
 import { useRouter,useRoute } from 'vue-router'
@@ -73,6 +54,27 @@ onMounted(()=>{
    
 })
 </script>
+
+
+<template>
+  <div v-if="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement du resultat...</p>
+  </div>
+  <div class="quiz-box results-box" v-else>
+    <h2 class="results-title">Quiz Terminé!</h2>
+    <div class="results-emoji">{{ resultEmoji }}</div>
+    <div class="results-score">{{ quizScore.score }} / {{ longQuestion }}</div>
+     <p class="results-percentage">{{ pourcen }}% de réussite</p>
+    <button class="btn btn-primary" @click.prevent="retourTheme">
+       Retour aux thèmes
+    </button> 
+    <button class="btn btn-secondary" @click.prevent="restart">
+       Recommencer
+    </button>
+  </div>
+</template>
+
 
 <style scoped>
 .quiz-box {
