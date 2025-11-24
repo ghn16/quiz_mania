@@ -27,18 +27,18 @@
     </div>
 
     <div class="answers-container">
-      <button
-        v-for="(reponse, index) in themeQuestion.data.questions[currentQuestionIndex].reponses"
-        :key="reponse.id"
-        class="answer-btn"
-        :class="{
-          correct: reponse.status === correctReponseId, 
-          incorrect: reponse.id === selectAnswerId && reponse.id !== correctReponseId, 
-        }"
-        @click="selectAnswer(reponse)"
-      >
-        {{ reponse.name }}
-      </button>
+        <button
+          v-for="(reponse, index) in themeQuestion.data.questions[currentQuestionIndex].reponses"
+          :key="reponse.id"
+          class="answer-btn"
+          :class="{
+            correct: reponse.id === correctReponseId, 
+            incorrect: reponse.id === selectAnswerId && reponse.id !== correctReponseId, 
+          }"
+          @click="selectAnswer(reponse)"
+        >
+          {{ reponse.name }}
+        </button>
       {{ correctReponseId }}
     </div>
   </div>
@@ -120,9 +120,10 @@ const stopTimer = () => {
    console.log('longQuestion.value: ', longQuestion.value)
    console.log('currentQuestionIndex.value : ', currentQuestionIndex.value +1);
    currentQuestionIndex.value++
+    selectAnswerId.value = null
+  correctReponseId.value = null
    
     if (currentQuestionIndex.value +1 > longQuestion.value) {
-       await new Promise(resolve => setTimeout(resolve, 50))
     router.push('/resultat/' + themeId)
     interval.value = null
   }
@@ -130,38 +131,39 @@ const stopTimer = () => {
 }
 
 const selectAnswer = async (reponse) => {
-  stopTimer()
-  selectAnswerId.value = reponse.status
-  console.log(selectAnswerId)
-  const response =
-    await themeQuestion.value.data.questions[currentQuestionIndex.value].reponses[reponse.id - 1]
-  answerId.value = response
-  console.log(' answerId.value: ', answerId.value)
-  const correct = await themeQuestion.value.data.questions[
-    currentQuestionIndex.value
-  ].reponses.find((r) => r.status === 'vrai')
-  correctReponseId.value = correct.status
 
-  if (answerId.value.status !== 'vrai') {
+  stopTimer()
+  selectAnswerId.value = reponse.id
+  console.log(selectAnswerId)
+
+  
+  // const response = await themeQuestion.value.data.questions[currentQuestionIndex.value].reponses[reponse.id - 1]
+  // answerId.value = response
+
+  // console.log(' answerId.value: ', answerId.value)
+
+  const correct = await themeQuestion.value.data.questions[currentQuestionIndex.value].reponses.find((r) => r.status === 'vrai')
+
+  correctReponseId.value = correct.id
+
+  if (selectAnswerId.value !== correctReponseId.value) {
     console.log(answerId.value.id)
-    return (selectAnswerId.value = answerId.value.id)
-  } else if (answerId.value.status === 'vrai') {
+    
+  } else if (selectAnswerId.value === correctReponseId.value) {
     console.log('fvyjhfvugv')
    quizScore.score += 1
-    return correctReponseId.value
   }
 
-  setTimeout(() => nextQuestion(), 1500)
+  setTimeout(() => nextQuestion(), 15000)
 }
-onMounted(async () => {
+
+onMounted( () => {
 
   startTimer()
-  await getThemeIdApi()
+   getThemeIdApi()
 })
 
-onBeforeUnmount(() => {
-  stopTimer()
-})
+
 </script>
 
 <style scoped>

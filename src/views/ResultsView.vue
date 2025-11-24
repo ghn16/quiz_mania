@@ -3,7 +3,7 @@
     <div class="spinner"></div>
     <p>Chargement du resultat...</p>
   </div>
-  <div class="quiz-box results-box" v-if="themeQuestion">
+  <div class="quiz-box results-box" v-else>
     <h2 class="results-title">Quiz Terminé!</h2>
     <div class="results-emoji">{{ resultEmoji }}</div>
     <div class="results-score">{{ quizScore.score }} / {{ longQuestion }}</div>
@@ -28,7 +28,6 @@ const quizScore = useScoreStore()
 
 const router = useRouter()
 const route = useRoute()
-const datas = ref(null)
 const themeQuestion = ref(null)
 const longQuestion = ref()
 const loading = ref(false)
@@ -54,11 +53,10 @@ const themeId = route.params.themeId
 )
 
 const resultEmoji = computed(() => {
-  const p = pourcen.value
-  if (p === 100) return '🏆'
-  if (p >= 80) return '🎉'
-  if (p >= 60) return '😊'
-  if (p >= 40) return '😐'
+  if (pourcen.value === 100) return '🏆'
+  if (pourcen.value >= 80) return '🎉'
+  if (pourcen.value >= 60) return '😊'
+  if (pourcen.value >= 40) return '😐'
   return '😢'
 })
 
@@ -70,9 +68,9 @@ const retourTheme = () => {
   router.push('/')
 } 
 
-
-onMounted(async()=>{
-  await getThemeIdApi()
+onMounted(()=>{
+   getThemeIdApi()
+   
 })
 </script>
 
