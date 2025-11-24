@@ -34,12 +34,14 @@ const routes = [
    {
     path: '/admin/dashboard',
     name: 'adminDashboard',
-    component: AdminDashboard
+    component: AdminDashboard,
+    meta: { requiresAuth: true }
+
   },
   {
     path: '/:pathMatch(.*)*',
     redirect: '/'
-  }
+  },
 ]
 
 export const router = createRouter({
@@ -47,16 +49,14 @@ export const router = createRouter({
   routes
 })
 
-/* router.beforeEach((to, from, next) => {
+ router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem("token")
   if (to.meta.requiresAuth && !isAuthenticated) {
 
-    next("/")
-  } else if (!to.meta.requiresAuth && isAuthenticated) {
-     router.back()
+    next("/admin")
   }
   else {
     next()
   }
 })
- */
+ 

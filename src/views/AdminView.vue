@@ -6,31 +6,10 @@ import { apiPost } from '@/helpears/axiosApi'
 const router = useRouter()
 const password = ref()
 const email = ref()
-const errorMessage = ref('')
+
 const isAuthenticated = ref(false)
 const datas = ref()
-const activeTab = ref('themes')
-const expandedThemes = ref([])
-const showConfirmModal = ref(false)
-const confirmModal = reactive({ title: '', message: '', action: null })
 
-// Thème
-const editingTheme = ref(null)
-const themeForm = reactive({ name: '', icon: '' })
-
-// Question
-const editingQuestion = ref(null)
-const questionForm = reactive({
-  themeId: '',
-  question: '',
-  answers: ['', '', '', ''],
-  correct: 0,
-  time: 15,
-})
-
-onMounted(() => {
-  isAuthenticated.value = localStorage.getItem('token')
-})
 
 const login = async () => {
   const response = await apiPost('http://localhost:8050/api/login', {
@@ -40,128 +19,21 @@ const login = async () => {
   datas.value = response
   localStorage.setItem('user', JSON.stringify(datas.value.data.data))
   localStorage.setItem('token', datas.value.data.access_token)
-
-  console.log('datas.value: ', datas.value.data)
+  router.push("/admin/dashboard")
 }
 
-const logout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
-  router.push('/admin')
-}
 
-// === THÈMES ===
-const submitTheme = () => {
-  if (!themeForm.name || !themeForm.icon) return alert('⚠️ Remplissez tous les champs')
-  if (editingTheme.value) {
-    quizStore.updateTheme(editingTheme.value, { ...themeForm })
-    editingTheme.value = null
-  } else {
-    quizStore.addTheme({ ...themeForm })
-  }
-  themeForm.name = ''
-  themeForm.icon = ''
-}
 
-const editTheme = (theme) => {
-  editingTheme.value = theme.id
-  themeForm.name = theme.name
-  themeForm.icon = theme.icon
-}
-
-const cancelEditTheme = () => {
-  editingTheme.value = null
-  themeForm.name = ''
-  themeForm.icon = ''
-}
-
-const confirmDeleteTheme = (id) => {
-  const theme = quizStore.themes.find((t) => t.id === id)
-  confirmModal.title = '🗑️ Supprimer le thème'
-  confirmModal.message = `Supprimer "${theme?.name}" et toutes ses questions ?`
-  confirmModal.action = () => {
-    quizStore.deleteTheme(id)
-    showConfirmModal.value = false
-  }
-  showConfirmModal.value = true
-}
-
-// === QUESTIONS ===
-const submitQuestion = () => {
-  if (
-    !questionForm.themeId ||
-    !questionForm.question ||
-    questionForm.answers.some((a) => !a.trim())
-  ) {
-    return alert('⚠️ Remplissez tous les champs')
-  }
-  const data = {
-    themeId: questionForm.themeId,
-    question: questionForm.question,
-    answers: [...questionForm.answers],
-    correct: questionForm.correct,
-    time: questionForm.time,
-  }
-  if (editingQuestion.value) {
-    quizStore.updateQuestion(editingQuestion.value.themeId, editingQuestion.value.index, data)
-    editingQuestion.value = null
-  } else {
-    quizStore.addQuestion(data)
-  }
-  resetQuestionForm()
-}
-
-const editQuestion = (themeId, index, q) => {
-  editingQuestion.value = { themeId, index }
-  questionForm.themeId = themeId
-  questionForm.question = q.question
-  questionForm.answers = [...q.answers]
-  questionForm.correct = q.correct
-  questionForm.time = q.time
-}
-
-const cancelEditQuestion = () => {
-  editingQuestion.value = null
-  resetQuestionForm()
-}
-
-const resetQuestionForm = () => {
-  questionForm.question = ''
-  questionForm.answers = ['', '', '', '']
-  questionForm.correct = 0
-  questionForm.time = 15
-}
-
-const confirmDeleteQuestion = (themeId, index) => {
-  confirmModal.title = '🗑️ Supprimer la question'
-  confirmModal.message = 'Supprimer cette question ?'
-  confirmModal.action = () => {
-    quizStore.deleteQuestion(themeId, index)
-    showConfirmModal.value = false
-  }
-  showConfirmModal.value = true
-}
-
-const addAnswer = () => {
-  if (questionForm.answers.length < 6) questionForm.answers.push('')
-}
-const removeAnswer = (index) => {
-  questionForm.answers.splice(index, 1)
-  if (questionForm.correct >= questionForm.answers.length) questionForm.correct = 0
-}
-
-const toggleTheme = (id) => {
-  const idx = expandedThemes.value.indexOf(id)
-  if (idx === -1) expandedThemes.value.push(id)
-  else expandedThemes.value.splice(idx, 1)
-}
+onMounted(() => {
+ 
+})
 </script>
 <template>
   <div class="admin-wrapper">
-    <!-- Écran de connexion -->
+   
     <div v-if="!isAuthenticated" class="login-container">
       <div class="login-box">
-        <h2 class="login-title">🔐 Espace Administration</h2>
+        <h2 class="login-title"> Espace Administration</h2>
         <p class="login-subtitle">Connectez-vous pour gérer les quiz</p>
         <div class="form-group">
           <label>Email</label>
@@ -176,215 +48,8 @@ const toggleTheme = (id) => {
             class="login-input"
           />
         </div>
-        <!--         <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
- -->
         <button @click.prevent="login" class="btn btn-primary login-btn">Se connecter</button>
         <button @click="goHome" class="btn btn-secondary back-btn">← Retour à l'accueil</button>
-      </div>
-    </div>
-
-    <!-- Panel Admin -->
-    <div v-else class="admin-panel">
-      <div class="admin-header">
-        <h2 class="admin-title">🔧 Administration</h2>
-        <div class="header-actions">
-          <button @click="goHome" class="btn btn-secondary btn-small">🏠 Accueil</button>
-          <button @click="logout" class="btn btn-danger btn-small">🚪 Déconnexion</button>
-        </div>
-      </div>
-
-      <div class="tabs-container">
-        <button
-          @click="activeTab = 'themes'"
-          :class="{ active: activeTab === 'themes' }"
-          class="tab-btn"
-        >
-          📁 Thèmes
-        </button>
-        <button
-          @click="activeTab = 'questions'"
-          :class="{ active: activeTab === 'questions' }"
-          class="tab-btn"
-        >
-          ❓ Questions
-        </button>
-      </div>
-
-      <!-- ONGLET THÈMES -->
-      <div v-if="activeTab === 'themes'" class="tab-content">
-        <div class="section">
-          <h3 class="section-title">
-            {{ editingTheme ? '✏️ Modifier le thème' : '➕ Ajouter un thème' }}
-          </h3>
-          <div class="form-row">
-            <div class="form-group flex-1">
-              <label>Nom du thème</label>
-              <input v-model="themeForm.name" placeholder="Ex: Géographie" />
-            </div>
-            <div class="form-group" style="width: 120px">
-              <label>Icône</label>
-              <input v-model="themeForm.icon" placeholder="🌍" />
-            </div>
-          </div>
-          <div class="form-actions">
-            <button v-if="editingTheme" @click="cancelEditTheme" class="btn btn-secondary">
-              Annuler
-            </button>
-            <button @click="submitTheme" class="btn btn-primary">
-              {{ editingTheme ? '💾 Sauvegarder' : '➕ Ajouter' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="section">
-          <h3 class="section-title">📋 Thèmes existants ({{ quizStore.themes.length }})</h3>
-          <div v-if="quizStore.themes.length === 0" class="empty-state">Aucun thème créé.</div>
-          <div v-for="theme in quizStore.themes" :key="theme.id" class="list-item">
-            <div class="list-item-content">
-              <span class="list-icon">{{ theme.icon }}</span>
-              <div class="list-details">
-                <strong class="list-name">{{ theme.name }}</strong>
-                <span class="list-info">{{ theme.questions.length }} questions</span>
-              </div>
-            </div>
-            <div class="list-actions">
-              <button @click="editTheme(theme)" class="btn btn-warning btn-icon">✏️</button>
-              <button @click="confirmDeleteTheme(theme.id)" class="btn btn-danger btn-icon">
-                🗑️
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ONGLET QUESTIONS -->
-      <div v-if="activeTab === 'questions'" class="tab-content">
-        <div class="section">
-          <h3 class="section-title">
-            {{ editingQuestion ? '✏️ Modifier la question' : '➕ Ajouter une question' }}
-          </h3>
-          <div class="form-group">
-            <label>Thème</label>
-            <select v-model="questionForm.themeId" :disabled="editingQuestion !== null">
-              <option value="">-- Sélectionner un thème --</option>
-              <option v-for="theme in quizStore.themes" :key="theme.id" :value="theme.id">
-                {{ theme.icon }} {{ theme.name }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Question</label>
-            <textarea
-              v-model="questionForm.question"
-              rows="2"
-              placeholder="Votre question..."
-            ></textarea>
-          </div>
-          <div class="form-group">
-            <label>Réponses (cochez la bonne réponse)</label>
-            <div v-for="(answer, index) in questionForm.answers" :key="index" class="answer-row">
-              <input type="radio" :value="index" v-model="questionForm.correct" />
-              <input
-                v-model="questionForm.answers[index]"
-                type="text"
-                :placeholder="'Réponse ' + (index + 1)"
-                class="answer-input"
-              />
-              <button
-                v-if="questionForm.answers.length > 2"
-                @click="removeAnswer(index)"
-                class="btn btn-danger btn-icon btn-small"
-              >
-                ✕
-              </button>
-            </div>
-            <button
-              v-if="questionForm.answers.length < 6"
-              @click="addAnswer"
-              class="btn btn-secondary btn-small"
-            >
-              + Ajouter une réponse
-            </button>
-          </div>
-          <div class="form-row">
-            <div class="form-group" style="width: 150px">
-              <label>Temps (secondes)</label>
-              <input v-model.number="questionForm.time" type="number" min="5" max="60" />
-            </div>
-          </div>
-          <div class="form-actions">
-            <button v-if="editingQuestion" @click="cancelEditQuestion" class="btn btn-secondary">
-              Annuler
-            </button>
-            <button @click="submitQuestion" class="btn btn-primary">
-              {{ editingQuestion ? '💾 Sauvegarder' : '➕ Ajouter' }}
-            </button>
-          </div>
-        </div>
-
-        <div class="section">
-          <h3 class="section-title">📋 Questions par thème</h3>
-          <div v-if="quizStore.themes.length === 0" class="empty-state">
-            Créez d'abord un thème.
-          </div>
-          <div v-for="theme in quizStore.themes" :key="theme.id" class="theme-block">
-            <div class="theme-header" @click="toggleTheme(theme.id)">
-              <span>{{ theme.icon }} {{ theme.name }}</span>
-              <span class="badge">{{ theme.questions.length }}</span>
-              <span class="chevron" :class="{ open: expandedThemes.includes(theme.id) }">▼</span>
-            </div>
-            <div v-if="expandedThemes.includes(theme.id)" class="theme-questions">
-              <div v-if="theme.questions.length === 0" class="empty-state small">
-                Aucune question
-              </div>
-              <div v-for="(q, qIndex) in theme.questions" :key="qIndex" class="question-item">
-                <div class="question-content">
-                  <div class="question-text-admin">{{ qIndex + 1 }}. {{ q.question }}</div>
-                  <div class="question-answers">
-                    <span
-                      v-for="(a, aIndex) in q.answers"
-                      :key="aIndex"
-                      :class="['answer-chip', { correct: aIndex === q.correct }]"
-                      >{{ a }}</span
-                    >
-                  </div>
-                  <div class="question-meta">⏱️ {{ q.time }}s</div>
-                </div>
-                <div class="question-actions">
-                  <button
-                    @click="editQuestion(theme.id, qIndex, q)"
-                    class="btn btn-warning btn-icon btn-small"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    @click="confirmDeleteQuestion(theme.id, qIndex)"
-                    class="btn btn-danger btn-icon btn-small"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div v-if="datas">
-      <pre>
-            {{ datas.data.data }}
-          </pre
-      >
-    </div>
-    <!-- Modal de confirmation -->
-    <div v-if="showConfirmModal" class="modal-overlay" @click.self="showConfirmModal = false">
-      <div class="confirm-modal">
-        <h3>{{ confirmModal.title }}</h3>
-        <p>{{ confirmModal.message }}</p>
-        <div class="modal-actions">
-          <button @click="showConfirmModal = false" class="btn btn-secondary">Annuler</button>
-          <button @click="confirmModal.action" class="btn btn-danger">Confirmer</button>
-        </div>
       </div>
     </div>
   </div>

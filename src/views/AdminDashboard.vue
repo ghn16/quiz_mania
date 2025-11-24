@@ -54,6 +54,15 @@ const ApiModifyTheme = async()=>{
   console.log('ThemeEdit.value: ', ThemeEdit.value);
 }
 
+const logout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  router.push('/admin')
+}
+
+const retourAuBercail = ()=>{
+  router.push("/")
+}
 
 onMounted(()=>{
   apiGetThemeQuestion()
@@ -66,7 +75,7 @@ onMounted(()=>{
       <div class="admin-header">
         <h2 class="admin-title"> Administration</h2>
         <div class="header-actions">
-          <button @click="goHome" class="btn btn-primary btn-small"> Accueil</button>
+          <button @click="retourAuBercail" class="btn btn-primary btn-small"> Accueil</button>
           <button @click="logout" class="btn btn-danger btn-small"> Déconnexion</button>
         </div>
       </div>
@@ -84,7 +93,7 @@ onMounted(()=>{
         
           class="tab-btn"
         >
-          ❓ Questions
+           Questions
         </button>
       </div>
 
