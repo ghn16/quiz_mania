@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted,ref } from 'vue'
+import { computed, onMounted,ref, resolveDirective, watch, watchEffect } from 'vue'
 import { useRouter,useRoute } from 'vue-router'
 import { useScoreStore } from '@/store/score'
 import { apiGet } from '@/helpears/axiosApi'
@@ -11,23 +11,24 @@ const router = useRouter()
 const route = useRoute()
 const themeQuestion = ref(null)
 const longQuestion = ref()
-const loading = ref(false)
-const themeId = route.params.themeId
-
+const loading = ref()
+const themeId = ref(route.params.themeId)
+const refresh = ref()
 
  const getThemeIdApi = async () => {
+    loading.value = true
+    const response = await apiGet('http://localhost:8050/api/v1/admin/theme/indexThemeId/' + themeId.value)
+    themeQuestion.value = response.data
+    console.log(' themeQuestion.value: ',  themeQuestion.value);
+    longQuestion.value = await  themeQuestion.value.questions.length
+    console.log('longQuestion.value: ', longQuestion.value);
+    loading.value = false
 
-  loading.value = true
+  }
 
-  const response = await apiGet('http://localhost:8050/api/v1/admin/theme/indexThemeId/' + themeId)
-  themeQuestion.value = response.data
-  console.log(' themeQuestion.value: ',  themeQuestion.value);
-  longQuestion.value = await  themeQuestion.value.questions.length
-  console.log('longQuestion.value: ', longQuestion.value);
-
-  loading.value = false
-
-}
+  watchEffect(()=>{    
+    getThemeIdApi()
+  })
 
  const pourcen = computed(() =>
   Math.round((quizScore.score / longQuestion.value) * 100)
@@ -42,17 +43,24 @@ const resultEmoji = computed(() => {
 })
 
  const restart = () => {
-  router.push('/quiz/' + themeId)
+  router.push('/quiz/' + themeId.value)
 }
 
 const retourTheme = () => {
   router.push('/')
 } 
 
-onMounted(()=>{
-   getThemeIdApi()
-   
+onMounted( async()=>{
+ //loading.value = true
+ //await getThemeIdApi()
+  
 })
+
+/* watchEffect(()=>{
+  console.log("ThemeId", themeId.value)
+
+})
+ */
 </script>
 
 
@@ -64,8 +72,8 @@ onMounted(()=>{
   <div class="quiz-box results-box" v-else>
     <h2 class="results-title">Quiz Terminé!</h2>
     <div class="results-emoji">{{ resultEmoji }}</div>
-    <div class="results-score">{{ quizScore.score }} / {{ longQuestion }}</div>
-     <p class="results-percentage">{{ pourcen }}% de réussite</p>
+    <div class="results-score"> {{ pourcen }}%</div>
+     <p class="results-percentage">{{ quizScore.score }} / {{ longQuestion }}</p>
     <button class="btn btn-primary" @click.prevent="retourTheme">
        Retour aux thèmes
     </button> 

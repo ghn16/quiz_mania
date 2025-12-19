@@ -8,52 +8,44 @@ const quizScore = useScoreStore()
 
 quizScore.score = 0
 
-
 const router = useRouter()
 
 const route = useRoute()
 const currentQuestionIndex = ref(0)
 const loading = ref(false)
-const answerId = ref()
 const selectAnswerId = ref()
 const correctReponseId = ref(null)
-
 
 const themeQuestion = ref(null)
 const longQuestion = ref()
 
 const themeId = route.params.themeId
-const timeGo = ref(15)
-let interval = null
-
-const startTimer = () => {
-
-  timeGo.value = 15
-
+const timeLetGo = ref(15)
+const interval = ref(null)
 
 const progressBar = computed(() => {
-  if (longQuestion.value === 0) return 0
+  if (!longQuestion.value) return 0
   return Math.round(((currentQuestionIndex.value + 1) / longQuestion.value) * 100)
 })
 
+const startTimer = () => {
+  timeLetGo.value = 15
 
+  if (interval.value) clearInterval(interval.value)
 
-  if (interval) clearInterval(interval)
-
-  interval = setInterval(() => {
-    timeGo.value--
-
-    if (timeGo.value <= 0) {
-      clearInterval(interval)
+  interval.value = setInterval(() => {
+    timeLetGo.value--
+    if (timeLetGo.value <= 0) {
+      clearInterval(interval.value)
       nextQuestion()
     }
-  }, 1000) 
+  }, 1000)
 }
 
 const stopTimer = () => {
-  if (interval) {
-    clearInterval(interval)
-    interval = null
+  if (interval.value) {
+    clearInterval(interval.value)
+    interval.value = null
   }
 
   setTimeout(() => {
@@ -61,60 +53,60 @@ const stopTimer = () => {
   }, 1000)
 }
 
- const getThemeIdApi = async (id) => {
+const getThemeIdApi = async (id) => {
   const response = await apiGet('http://localhost:8050/api/v1/admin/theme/indexThemeId/' + themeId)
   themeQuestion.value = response
   longQuestion.value = themeQuestion.value.data.questions.length
-  return longQuestion
-  console.log('themesQuestion.value: ', themeQuestion.value.data.questions[0].reponses[0].id)
+  return longQuestion.value
 }
 
- const nextQuestion = async () => {
-   
-   console.log('longQuestion.value: ', longQuestion.value)
-   console.log('currentQuestionIndex.value : ', currentQuestionIndex.value +1);
-   currentQuestionIndex.value++
-    selectAnswerId.value = null
-  correctReponseId.value = null
-   
-    if (currentQuestionIndex.value +1 > longQuestion.value) {
+const nextQuestion = async () => {
+  console.log('longQuestion.value: ', longQuestion.value)
+
+  //correctReponseId.value = null
+
+  currentQuestionIndex.value++
+
+  console.log('currentQuestionIndex: ', currentQuestionIndex.value)
+  
+
+  if (longQuestion.value <= currentQuestionIndex.value) {
+    /*  console.log('longQuestion.value: ', longQuestion.value);
+    console.log('currentQuestionIndex.value: ', currentQuestionIndex.value); */
     router.push('/resultat/' + themeId)
-    interval.value = null
+    setTimeout(()=>{
+      location.reload()
+    }, 100)
+    return
   }
-  startTimer() 
+  console.log("j'y suis encore")
+  startTimer()
 }
 
 const selectAnswer = async (reponse) => {
-
   stopTimer()
   selectAnswerId.value = reponse.id
-  console.log(selectAnswerId)
 
-  
   // const response = await themeQuestion.value.data.questions[currentQuestionIndex.value].reponses[reponse.id - 1]
   // answerId.value = response
 
   // console.log(' answerId.value: ', answerId.value)
 
-  const correct = await themeQuestion.value.data.questions[currentQuestionIndex.value].reponses.find((r) => r.status === 'vrai')
+  const correct = await themeQuestion.value.data.questions[
+    currentQuestionIndex.value
+  ].reponses.find((r) => r.status === 'vrai')
 
   correctReponseId.value = correct.id
 
   if (selectAnswerId.value !== correctReponseId.value) {
-    console.log(answerId.value.id)
-    
   } else if (selectAnswerId.value === correctReponseId.value) {
-    console.log('fvyjhfvugv')
-   quizScore.score += 1
+    quizScore.score += 1
   }
-
-  setTimeout(() => nextQuestion(), 15000)
 }
 
-onMounted( () => {
-
+onMounted(async () => {
+  await getThemeIdApi()
   startTimer()
-   getThemeIdApi()
 })
 
 
@@ -135,36 +127,37 @@ onMounted( () => {
     <div class="question-header">
       <div class="score-display">
         <span>🏆</span>
-          <span>{{ quizScore.score }}</span> 
+        <span>{{ quizScore.score }}</span>
       </div>
       <div>Question {{ currentQuestionIndex + 1 }} / {{ themeQuestion.data.questions.length }}</div>
-      <div class="timer-display">{{ timeGo }}s</div>
+      <div class="timer-display">{{ timeLetGo }}s</div>
     </div>
 
     <div class="question-container">
-      <div class="question-text">
+      <div class="question-text" v-if="themeQuestion && longQuestion > currentQuestionIndex">
         {{ themeQuestion.data.questions[currentQuestionIndex].question }}
       </div>
     </div>
 
-    <div class="answers-container">
-        <button
-          v-for="(reponse, index) in themeQuestion.data.questions[currentQuestionIndex].reponses"
-          :key="reponse.id"
-          class="answer-btn"
-          :class="{
-            correct: reponse.id === correctReponseId, 
-            incorrect: reponse.id === selectAnswerId && reponse.id !== correctReponseId, 
-          }"
-          @click="selectAnswer(reponse)"
-        >
-          {{ reponse.name }}
-        </button>
-      {{ correctReponseId }}
+    <div
+      class="answers-container"
+      v-if="themeQuestion.data.questions && longQuestion > currentQuestionIndex"
+    >
+      <button
+        v-for="(reponse, index) in themeQuestion.data.questions[currentQuestionIndex].reponses"
+        :key="reponse.id"
+        class="answer-btn"
+        :class="{
+          correct: reponse.id === correctReponseId,
+          incorrect: reponse.id === selectAnswerId && reponse.id !== correctReponseId,
+        }"
+        @click="selectAnswer(reponse)"
+      >
+        {{ reponse.name }}
+      </button>
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .quiz-box {

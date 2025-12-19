@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { useRouter,useRoute } from 'vue-router'
-import { apiPost,apiGet } from '@/helpears/axiosApi'
+import { useRouter, useRoute } from 'vue-router'
+import { apiPost, apiGet, apiDelete } from '@/helpears/axiosApi'
 
 const themeQuestion = ref()
 const loading = ref()
@@ -10,61 +10,72 @@ const route = useRoute()
 const nameTheme = ref()
 const themeAdd = ref()
 const ThemeEdit = ref()
+const deconnect = ref()
 const question = ref(false)
 const displayBtnEdit = ref(false)
 
 const id = route.query.id
 
-
-
-const questionFunction = ()=>{
-  console.log("jai ete checker")
-  question.value =true
+const questionFunction = () => {
+  console.log('jai ete checker')
+  router.push('/admin/dashboard/question')
+  question.value = true
 }
 
 /*Api pour les themes et question assossie*/
-const apiGetThemeQuestion =async () =>{
-  const response = await apiGet("http://localhost:8050/api/v1/admin/theme/index")
+const apiGetThemeQuestion = async () => {
+  const response = await apiGet('http://localhost:8050/api/v1/admin/theme/index')
   themeQuestion.value = response.data
-  console.log(' themeQuestion.value: ',  themeQuestion.value);
+  console.log(' themeQuestion.value: ', themeQuestion.value)
 }
 
 /* Api ajouter theme */
 
-const apiAjoutTheme = async()=>{
-    const response = await apiPost("http://localhost:8050/api/v1/admin/theme/store",{name:nameTheme.value})
+const apiAjoutTheme = async () => {
+  const response = await apiPost('http://localhost:8050/api/v1/admin/theme/store', {
+    name: nameTheme.value,
+  })
   themeAdd.value = response
 }
 
 /* Api recuperer theme a edit */
-const ApiEditTheme = async(theme)=>{
+const ApiEditTheme = async (theme) => {
   displayBtnEdit.value = true
-    const response = await apiGet("http://localhost:8050/api/v1/admin/theme/edit/" + theme.id)
+  const response = await apiGet('http://localhost:8050/api/v1/admin/theme/edit/' + theme.id)
   nameTheme.value = theme.name
- router.push(`/admin/dashboard?id=${theme.id}`)
-  console.log('nameTheme.value: ', nameTheme.value);
+  router.push(`/admin/dashboard?id=${theme.id}`)
+  console.log('nameTheme.value: ', nameTheme.value)
+  router.push('/admin/dashboard')
+
 }
 
-/* Api Modify theme */
+/* Api Modify themee */
 
-const ApiModifyTheme = async()=>{
+const ApiModifyTheme = async () => {
   displayBtnEdit.value = true
-    const response = await apiPost("http://localhost:8050/api/v1/admin/theme/update/" + id, {name:nameTheme.value})
+  const response = await apiPost('http://localhost:8050/api/v1/admin/theme/update/' + id, {
+    name: nameTheme.value,
+  })
   ThemeEdit.value = response.data
-  console.log('ThemeEdit.value: ', ThemeEdit.value);
+  console.log('ThemeEdit.value: ', ThemeEdit.value)
+  router.push('/admin/dashboard')
+
 }
 
-const logout = () => {
-  localStorage.removeItem('token')
+const logout = async () => {
+  const response = await apiDelete("http://localhost:8050/api/logout")
+  deconnect.value = response
+
+localStorage.removeItem('token')
   localStorage.removeItem('user')
-  router.push('/admin')
+   router.push('/admin')
 }
 
-const retourAuBercail = ()=>{
-  router.push("/")
+const retourAuBercail = () => {
+  router.push('/')
 }
 
-onMounted(()=>{
+onMounted(() => {
   apiGetThemeQuestion()
   displayBtnEdit.value = false
 })
@@ -73,28 +84,16 @@ onMounted(()=>{
   <div class="admin-wrapper" v-if="themeQuestion">
     <div class="admin-panel">
       <div class="admin-header">
-        <h2 class="admin-title"> Administration</h2>
+        <h2 class="admin-title">Administration</h2>
         <div class="header-actions">
-          <button @click="retourAuBercail" class="btn btn-primary btn-small"> Accueil</button>
-          <button @click="logout" class="btn btn-danger btn-small"> Déconnexion</button>
+          <button @click="retourAuBercail" class="btn btn-primary btn-small">Accueil</button>
+          <button @click="logout" class="btn btn-danger btn-small">Déconnexion</button>
         </div>
       </div>
 
       <div class="tabs-container">
-        <button
-          @click="activeTab = 'themes'"
-         
-          class="tab-btn active"
-        >
-           Thèmes
-        </button>
-        <button
-          @click="questionFunction"
-        
-          class="tab-btn"
-        >
-           Questions
-        </button>
+        <button @click="activeTab = 'themes'" class="tab-btn active">Thèmes</button>
+        <button @click="questionFunction" class="tab-btn">Questions</button>
       </div>
 
       <!-- ONGLET THÈMES -->
@@ -104,37 +103,42 @@ onMounted(()=>{
             {{ displayBtnEdit ? ' Modifier le thème' : ' Ajouter un thème' }}
           </h3>
           <div class="form-row">
-            <div class="form-group flex-1" >
+            <div class="form-group flex-1">
               <label>Nom du thème</label>
-              <input placeholder="Ex: Géographie"  v-model="nameTheme"/>
+              <input placeholder="Ex: Géographie" v-model="nameTheme" />
             </div>
           </div>
           <div class="form-actions">
-<!--             <button @click="cancelEditTheme" class="btn btn-secondary">Annuler</button>
- -->            <button @click.prevent="apiAjoutTheme" class="btn btn-primary">
-               Ajouter
-            </button>
+            <!--             <button @click="cancelEditTheme" class="btn btn-secondary">Annuler</button>
+ -->
+            <button @click.prevent="apiAjoutTheme" class="btn btn-primary">Ajouter</button>
           </div>
           <div class="form-actions">
-           <button @click.prevent="ApiModifyTheme(nameTheme.id)" v-if="displayBtnEdit" class="btn btn-secondary">
+            <button
+              @click.prevent="ApiModifyTheme(nameTheme.id)"
+              v-if="displayBtnEdit"
+              class="btn btn-secondary"
+            >
               Sauvegarder
             </button>
           </div>
         </div>
 
         <div class="section">
-          <h3 class="section-title"> Thèmes existants ({{themeQuestion.length}})</h3>
+          <h3 class="section-title">Thèmes existants ({{ themeQuestion.length }})</h3>
           <div class="list-item" v-for="theme in themeQuestion">
             <div class="list-item-content">
               <div class="list-details">
-                <strong class="list-name">{{theme.name}}</strong>
-                <span class="list-info">{{theme.questions.length}} questions</span>
+                <strong class="list-name">{{ theme.name }}</strong>
+                <span class="list-info">{{ theme.questions.length }} questions</span>
               </div>
             </div>
             <div class="list-actions">
-              <button @click="ApiEditTheme(theme)" class="btn btn-warning btn-icon">Modifier</button>
+              <button @click="ApiEditTheme(theme)" class="btn btn-warning btn-icon">
+                Modifier
+              </button>
               <button @click="confirmDeleteTheme(theme.id)" class="btn btn-danger btn-icon">
-                🗑️
+                Supprimer
               </button>
             </div>
           </div>
@@ -251,23 +255,6 @@ onMounted(()=>{
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-    <div v-if="datas">
-      <pre>
-            {{ datas.data.data }}
-          </pre
-      >
-    </div>
-    <!-- Modal de confirmation -->
-    <div v-if="showConfirmModal" class="modal-overlay" @click.self="showConfirmModal = false">
-      <div class="confirm-modal">
-        <h3>{{ confirmModal.title }}</h3>
-        <p>{{ confirmModal.message }}</p>
-        <div class="modal-actions">
-          <button @click="showConfirmModal = false" class="btn btn-secondary">Annuler</button>
-          <button @click="confirmModal.action" class="btn btn-danger">Confirmer</button>
         </div>
       </div>
     </div>
@@ -480,7 +467,7 @@ onMounted(()=>{
   background: #dc2626;
 }
 .btn-small {
-  padding: 8px 16px;
+  padding: 13px 41px;
   font-size: 0.9em;
 }
 .btn-icon {

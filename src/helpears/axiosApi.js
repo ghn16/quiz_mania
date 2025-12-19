@@ -76,7 +76,7 @@ export const apiDelete = async (url) =>{
     console.log('response ==>', response.data)
     return response
   } catch (err) {
-    console.error("Erreur API lors de ll'utilisation du helpears apiPost :", err)
+    console.error("Erreur API lors de ll'utilisation du helpears apiDelete :", err)
     error.value = err.message
     return error.value
   }

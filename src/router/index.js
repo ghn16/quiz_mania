@@ -4,12 +4,20 @@ import QuizView from '../views/QuizView.vue'
 import ResultsView from '../views/ResultsView.vue'
 import AdminView from '../views/AdminView.vue'
 import AdminDashboard from '@/views/AdminDashboard.vue'
+import AdminDashboardQestion from '@/views/AdminQuestionsView.vue'
+import Exo from '@/views/exo.vue'
 
 const routes = [
   {
     path: '/',
     name: 'home',
     component: HomeView,
+    meta: { title: 'Quiz Mania - Accueil' }
+  },
+    {
+    path: '/exo',
+    name: 'exo',
+    component: Exo,
     meta: { title: 'Quiz Mania - Accueil' }
   },
   {
@@ -35,6 +43,13 @@ const routes = [
     path: '/admin/dashboard',
     name: 'adminDashboard',
     component: AdminDashboard,
+    meta: { requiresAuth: true }
+
+  },
+  {
+    path: '/admin/dashboard/question',
+    name: 'AdminDashboardQestion',
+    component: AdminDashboardQestion,
     meta: { requiresAuth: true }
 
   },
